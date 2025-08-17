@@ -1,15 +1,22 @@
 import TelegramBot from "node-telegram-bot-api";
+
 import dotenv from "@dotenvx/dotenvx";
+import { registerBotHandlers } from "./bot";
 
 dotenv.config();
 
-const token = process.env.TELEGRAM_TOKEN as string;
-if (!token) {
-  throw new Error("⚠️ TELEGRAM_TOKEN is missing in .env file");
-}
+const token = process.env.TELEGRAM_TOKEN!;
+const bot = new TelegramBot(token);
+registerBotHandlers(bot);
 
-const bot = new TelegramBot(token, { polling: true });
+export const handler = async (event: any) => {
+  if (event.requestContext?.http?.method !== "POST") {
+    return { statusCode: 405, body: "Method Not Allowed" };
+  }
 
-bot.onText(/\/start/, (msg) => {
-  bot.sendMessage(msg.chat.id, "👋 Hello, world! I am alive 🚀");
-});
+  const update =
+    typeof event.body === "string" ? JSON.parse(event.body) : event.body;
+  bot.processUpdate(update);
+
+  return { statusCode: 200, body: "ok" };
+};
