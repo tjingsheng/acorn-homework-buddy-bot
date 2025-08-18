@@ -59,4 +59,5 @@ This setup guide walks you through installing and configuring the development en
    ```sh
    curl -X POST "https://api.telegram.org/bot<TELEGRAM_TOKEN>/setWebhook" \
      -d "url=<LAMBDA_FUNCTION_URL>"
+     -d "secret_token=<WEBHOOK_TOKEN>"
    ```
