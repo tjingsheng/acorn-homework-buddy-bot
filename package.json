@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "dev:docker": "docker compose up --remove-orphans --detach",
-    "dev:bot": "ts-node src/local.ts",
+    "dev:bot": "nodemon --watch src --watch .env --exec ts-node src/local.ts",
     "dev": "pnpm run --stream /^dev:.*/",
     "build": "esbuild src/index.ts --bundle --platform=node --target=node22 --format=cjs --outfile=dist/index.js --external:dotenv/config",
     "postbuild": "cd dist && zip function.zip index.js"
@@ -26,6 +26,7 @@
     "@types/node-telegram-bot-api": "^0.64.10",
     "@types/pg": "^8.15.5",
     "drizzle-kit": "^0.31.4",
+    "nodemon": "^3.1.10",
     "tsx": "^4.20.4"
   }
 }
