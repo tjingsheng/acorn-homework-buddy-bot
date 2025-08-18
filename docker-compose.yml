@@ -1,0 +1,16 @@
+services:
+  postgres:
+    container_name: acorn-postgres
+    image: postgres:16
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_USER: acorn-homework-buddy-bot-user
+      POSTGRES_PASSWORD: some-secure-password
+      POSTGRES_DB: acorn-homework-buddy-bot
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+volumes:
+  postgres_data:

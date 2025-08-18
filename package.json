@@ -3,9 +3,12 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
+  "type": "module",
   "scripts": {
-    "dev": "ts-node src/local.ts",
-    "build": "esbuild src/index.ts --bundle --platform=node --target=node20 --format=cjs --outfile=dist/index.js",
+    "dev:docker": "docker compose up --remove-orphans --detach",
+    "dev:bot": "ts-node src/local.ts",
+    "dev": "pnpm run --stream /^dev:.*/",
+    "build": "esbuild src/index.ts --bundle --platform=node --target=node22 --format=cjs --outfile=dist/index.js --external:dotenv/config",
     "postbuild": "cd dist && zip function.zip index.js"
   },
   "keywords": [],
@@ -13,11 +16,16 @@
   "license": "ISC",
   "dependencies": {
     "@dotenvx/dotenvx": "^1.48.4",
+    "drizzle-orm": "^0.44.4",
     "node-telegram-bot-api": "^0.66.0",
+    "pg": "^8.16.3",
     "ts-node": "^10.9.2"
   },
   "devDependencies": {
     "@types/node": "^24.3.0",
-    "@types/node-telegram-bot-api": "^0.64.10"
+    "@types/node-telegram-bot-api": "^0.64.10",
+    "@types/pg": "^8.15.5",
+    "drizzle-kit": "^0.31.4",
+    "tsx": "^4.20.4"
   }
 }
