@@ -24,9 +24,31 @@ export const testCommand: Middleware = async (ctx) => {
   const duration = Date.now() - start;
 
   log("Sending message to Telegram...");
-  await ctx.bot.sendMessage(
-    ctx.chatId,
-    `DB Test: Found ${result.length} scheduled messages.\n⏱ Took ${duration}ms.`
-  );
-  log("Message sent to Telegram.");
+  try {
+    await withTimeout(
+      ctx.bot.sendMessage(
+        ctx.chatId,
+        `DB Test: Found ${result.length} scheduled messages.\n Took some some ${duration}ms.`
+      ),
+      3000
+    );
+    log("Message sent to Telegram.");
+  } catch (err) {
+    log("sendMessage failed or timed out:", err);
+  }
 };
+
+function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timeout = setTimeout(() => reject(new Error("Timeout")), ms);
+    promise
+      .then((res) => {
+        clearTimeout(timeout);
+        resolve(res);
+      })
+      .catch((err) => {
+        clearTimeout(timeout);
+        reject(err);
+      });
+  });
+}
