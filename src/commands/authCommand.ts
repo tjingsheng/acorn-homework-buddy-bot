@@ -1,5 +1,5 @@
 import { db } from "../db/index.ts";
-import { member } from "../db/schema.ts";
+import { user } from "../db/schema.ts";
 import { type Middleware } from "../middlewares/botContex.ts";
 
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
@@ -25,13 +25,16 @@ export const authCommand: Middleware = async (ctx) => {
 
   if (supplied === ADMIN_PASSWORD) {
     await db
-      .insert(member)
+      .insert(user)
       .values({
         chatId: String(chatId),
         isAdmin: true,
+        firstName: message.from.first_name,
+        lastName: message.from.last_name,
+        userName: message.from.username,
       })
       .onConflictDoUpdate({
-        target: member.chatId,
+        target: user.chatId,
         set: { isAdmin: true },
       });
 

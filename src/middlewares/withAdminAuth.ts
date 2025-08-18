@@ -1,18 +1,18 @@
 import { eq } from "drizzle-orm";
 import { db } from "../db/index.ts";
-import { member } from "../db/schema.ts";
+import { user } from "../db/schema.ts";
 import { type Middleware } from "./botContex.ts";
 
 export const withAdminAuth: Middleware = async (ctx, next) => {
   const { chatId, bot } = ctx;
 
   try {
-    const [currentMember] = await db
-      .select({ isAdmin: member.isAdmin })
-      .from(member)
-      .where(eq(member.chatId, chatId));
+    const [currentUser] = await db
+      .select({ isAdmin: user.isAdmin })
+      .from(user)
+      .where(eq(user.chatId, chatId));
 
-    if (!currentMember?.isAdmin) {
+    if (!currentUser?.isAdmin) {
       await bot.sendMessage(
         chatId,
         "You are not authorised to use this command."

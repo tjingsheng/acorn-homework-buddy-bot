@@ -22,6 +22,13 @@
       "when": 1755497045566,
       "tag": "0002_shiny_black_crow",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1755500422415,
+      "tag": "0003_daily_wallflower",
+      "breakpoints": true
     }
   ]
 }

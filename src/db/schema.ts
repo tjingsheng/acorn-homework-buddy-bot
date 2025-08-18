@@ -13,7 +13,7 @@ export const scheduledMessage = pgTable("scheduled_message", {
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
 });
 
-export const member = pgTable("member", {
+export const user = pgTable("user", {
   id: serial("id").primaryKey(),
   chatId: text("chat_id").notNull().unique(),
   addedAt: timestamp("added_at", {
@@ -24,4 +24,7 @@ export const member = pgTable("member", {
     .notNull()
     .default(sql`now()`),
   isAdmin: boolean("is_admin").default(false),
+  firstName: text("first_name").notNull(),
+  lastName: text("last_name"),
+  userName: text("user_name"),
 });
