@@ -90,7 +90,10 @@ export const handler = async (event: any) => {
   const update =
     typeof event.body === "string" ? JSON.parse(event.body) : event.body;
 
-  bot.processUpdate(update);
+  await new Promise<void>((resolve) => {
+    bot.processUpdate(update);
+    setTimeout(resolve, 100);
+  });
 
   return {
     statusCode: 200,
