@@ -1,0 +1,1 @@
+ALTER TABLE "member" ALTER COLUMN "added_at" SET DEFAULT now();

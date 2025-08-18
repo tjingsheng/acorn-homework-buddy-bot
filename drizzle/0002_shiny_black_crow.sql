@@ -1,0 +1,1 @@
+ALTER TABLE "member" ALTER COLUMN "is_admin" SET DEFAULT false;

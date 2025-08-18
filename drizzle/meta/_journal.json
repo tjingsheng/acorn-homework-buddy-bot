@@ -8,6 +8,20 @@
       "when": 1755496190343,
       "tag": "0000_small_cardiac",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1755496634015,
+      "tag": "0001_lowly_madripoor",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1755497045566,
+      "tag": "0002_shiny_black_crow",
+      "breakpoints": true
     }
   ]
 }
