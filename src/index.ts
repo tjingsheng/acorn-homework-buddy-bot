@@ -10,7 +10,8 @@ dotenv.config();
 const token = process.env.TELEGRAM_TOKEN!;
 const webhookSecret = process.env.WEBHOOK_TOKEN!;
 
-const bot = new TelegramBot(token);
+const bot = new TelegramBot(token, { polling: false });
+
 registerBotHandlers(bot);
 
 export const handler = async (event: any) => {
