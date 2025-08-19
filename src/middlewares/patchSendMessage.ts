@@ -1,6 +1,12 @@
 import type TelegramBot from "node-telegram-bot-api";
 
-const activeInlineKeyboards = new Map<string, number>();
+type TrackedKeyboard = {
+  messageId: number;
+  originalText: string;
+  used: boolean;
+};
+
+const activeInlineKeyboards = new Map<string, TrackedKeyboard>();
 
 export const getActiveInlineKeyboards = () => activeInlineKeyboards;
 
@@ -11,23 +17,24 @@ export function patchSendMessage(bot: TelegramBot) {
     const message = await originalSendMessage(chatId, text, options);
 
     let markup: any = options?.reply_markup;
-
     if (typeof markup === "string") {
       try {
         markup = JSON.parse(markup);
-      } catch (err) {
+      } catch {
         markup = null;
       }
     }
 
-    const isInlineKeyboard =
+    if (
       markup &&
       typeof markup === "object" &&
-      "inline_keyboard" in markup &&
-      Array.isArray((markup as any).inline_keyboard);
-
-    if (isInlineKeyboard) {
-      activeInlineKeyboards.set(String(chatId), message.message_id);
+      Array.isArray((markup as any).inline_keyboard)
+    ) {
+      activeInlineKeyboards.set(String(chatId), {
+        messageId: message.message_id,
+        originalText: String(text),
+        used: false,
+      });
     }
 
     return message;

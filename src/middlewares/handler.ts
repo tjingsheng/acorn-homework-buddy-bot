@@ -31,15 +31,28 @@ export function handler(
     };
 
     try {
-      const lastKeyboardMsgId = activeInlineKeyboards.get(ctx.chatId);
-      if (lastKeyboardMsgId !== undefined) {
-        try {
+      const tracked = activeInlineKeyboards.get(ctx.chatId);
+      if (tracked) {
+        activeInlineKeyboards.delete(ctx.chatId);
+
+        if (!tracked.used) {
+          await bot.editMessageText(
+            `${tracked.originalText}\n\nYou did not select an option.`,
+            {
+              chat_id: chatId,
+              message_id: tracked.messageId,
+              reply_markup: { inline_keyboard: [] },
+            }
+          );
+        } else {
           await bot.editMessageReplyMarkup(
             { inline_keyboard: [] },
-            { chat_id: chatId, message_id: lastKeyboardMsgId }
+            {
+              chat_id: chatId,
+              message_id: tracked.messageId,
+            }
           );
-        } catch (err) {}
-        activeInlineKeyboards.delete(ctx.chatId);
+        }
       }
 
       let index = -1;
