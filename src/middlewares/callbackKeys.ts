@@ -13,6 +13,9 @@ export const CALLBACK_KEYS = {
     DAY: (d: number) => `${SCHEDULE_PREFIX}_day_${d}`,
     HOUR: (h: number) => `${SCHEDULE_PREFIX}_hour_${h}`,
     MINUTE: (m: number) => `${SCHEDULE_PREFIX}_minute_${m}`,
+
+    CONFIRM: `${SCHEDULE_PREFIX}_confirm`,
+    CANCEL: `${SCHEDULE_PREFIX}_cancel`,
   },
 
   START: {
