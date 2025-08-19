@@ -1,7 +1,7 @@
+import type TelegramBot from "node-telegram-bot-api";
 import { db } from "../db/index.ts";
 import { scheduledMessage } from "../db/schema.ts";
 import { type Middleware } from "../middlewares/botContex.ts";
-import type TelegramBot from "node-telegram-bot-api";
 import { CALLBACK_KEYS } from "../middlewares/callbackKeys.ts";
 import { handler } from "../middlewares/handler.ts";
 import { withAdminAuth } from "../middlewares/withAdminAuth.ts";
@@ -10,6 +10,7 @@ const scheduleState = new Map<
   string,
   { year: number; month?: number; day?: number; hour?: number; minute?: number }
 >();
+
 const awaitingMessage = new Map<string, Date>();
 
 function chunk<T>(arr: T[], size: number): T[][] {
@@ -34,18 +35,13 @@ export const scheduleCommand: Middleware = async (ctx) => {
   });
 };
 
-export const handleScheduleCallback = async (
-  bot: TelegramBot,
-  query: TelegramBot.CallbackQuery
-) => {
-  const { message, data, id } = query;
-  if (!message || !data) return;
+export const scheduleCallbackHandler: Middleware = async (ctx) => {
+  const { callbackQuery, bot, chatId } = ctx;
+  if (!callbackQuery?.data) return;
 
-  const chatId = String(message.chat.id);
+  const data = callbackQuery.data;
   const state = scheduleState.get(chatId);
-  if (!state) return;
-
-  if (!data.startsWith(CALLBACK_KEYS.PREFIX.SCHEDULE)) return;
+  if (!state || !data.startsWith(CALLBACK_KEYS.PREFIX.SCHEDULE)) return;
 
   const [_, part, value] = data.split("_");
 
@@ -113,18 +109,16 @@ export const handleScheduleCallback = async (
     );
   }
 
-  await bot.answerCallbackQuery(id);
+  await bot.answerCallbackQuery(callbackQuery.id);
 };
 
-export const handleScheduleMessage = async (
-  bot: TelegramBot,
-  msg: TelegramBot.Message
-) => {
-  const chatId = String(msg.chat.id);
-  const scheduledAt = awaitingMessage.get(chatId);
-  const text = msg.text?.trim();
+export const scheduleMessageHandler: Middleware = async (ctx) => {
+  const { bot, message, chatId } = ctx;
+  if (!message || !message.text?.trim()) return;
 
-  if (!scheduledAt || !text) return;
+  const text = message.text.trim();
+  const scheduledAt = awaitingMessage.get(chatId);
+  if (!scheduledAt) return;
 
   await db.insert(scheduledMessage).values({ scheduledAt, message: text });
   awaitingMessage.delete(chatId);
@@ -141,13 +135,10 @@ export const registerScheduleFunctionality = (bot: TelegramBot) => {
     handler(bot, [withAdminAuth, scheduleCommand])
   );
 
-  bot.on("callback_query", (query) => {
-    if (query.data?.startsWith(CALLBACK_KEYS.PREFIX.SCHEDULE)) {
-      handleScheduleCallback(bot, query);
-    }
-  });
+  bot.on(
+    "callback_query",
+    handler(bot, [withAdminAuth, scheduleCallbackHandler])
+  );
 
-  bot.on("message", (msg) => {
-    handleScheduleMessage(bot, msg);
-  });
+  bot.on("message", handler(bot, [withAdminAuth, scheduleMessageHandler]));
 };
