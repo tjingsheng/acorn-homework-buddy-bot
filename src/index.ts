@@ -1,102 +1,29 @@
 import TelegramBot from "node-telegram-bot-api";
 import dotenv from "@dotenvx/dotenvx";
-import { registerBotHandlers } from "./bot";
-import { db } from "./db/index.ts";
-import { scheduledMessage, user } from "./db/schema.ts";
-import { and, eq, lte } from "drizzle-orm";
+import { handler } from "./middlewares/handler.ts";
+import { startCommand } from "./commands/startCommand.ts";
+import { authCommand } from "./commands/authCommand.ts";
+import { testCommand } from "./commands/testCommand.ts";
+import { withAdminAuth } from "./middlewares/withAdminAuth.ts";
+import { hiCommand } from "./commands/hiCommand.ts";
+import { scheduleCommand } from "./commands/scheduleCommand.ts";
 
 dotenv.config();
 
 const token = process.env.TELEGRAM_TOKEN!;
-const webhookSecret = process.env.WEBHOOK_TOKEN!;
+const bot = new TelegramBot(token, { polling: true });
 
-const bot = new TelegramBot(token, { polling: false });
+bot.onText(/\/start/, handler(bot, [startCommand]));
 
-registerBotHandlers(bot);
+bot.onText(/^\/auth(?:\s+.+)?$/, handler(bot, [authCommand]));
 
-export const handler = async (event: any) => {
-  const method = event.requestContext?.http?.method;
-  const path = event.rawPath || event.requestContext?.http?.path || "/";
-  const headers = event.headers || {};
+bot.onText(/\/test/, handler(bot, [withAdminAuth, testCommand]));
 
-  if (method === "GET" && path === "/blast") {
-    const now = new Date();
+bot.onText(/\/hi/, handler(bot, [hiCommand]));
 
-    const messages = await db
-      .select()
-      .from(scheduledMessage)
-      .where(
-        and(
-          eq(scheduledMessage.sent, false),
-          lte(scheduledMessage.scheduledAt, now)
-        )
-      );
+bot.onText(
+  /^\/schedule(?:\s+.+)?$/,
+  handler(bot, [withAdminAuth, scheduleCommand])
+);
 
-    if (messages.length === 0) {
-      return {
-        statusCode: 200,
-        body: JSON.stringify({ status: "no messages to send" }),
-      };
-    }
-
-    const users = await db.select().from(user);
-
-    for (const msg of messages) {
-      for (const u of users) {
-        try {
-          await bot.sendMessage(u.chatId, msg.message);
-        } catch (err) {
-          console.error(`Failed to send to ${u.chatId}:`, err);
-        }
-      }
-
-      await db
-        .update(scheduledMessage)
-        .set({ sent: true })
-        .where(eq(scheduledMessage.id, msg.id));
-    }
-
-    return {
-      statusCode: 200,
-      body: JSON.stringify({ sentMessages: messages.length }),
-    };
-  }
-
-  if (method === "GET") {
-    return {
-      statusCode: 200,
-      body: JSON.stringify({ status: "ok" }),
-    };
-  }
-
-  if (method !== "POST") {
-    return {
-      statusCode: 405,
-      body: "Method Not Allowed",
-    };
-  }
-
-  const incomingSecret =
-    headers["X-Telegram-Bot-Api-Secret-Token"] ||
-    headers["x-telegram-bot-api-secret-token"];
-
-  if (incomingSecret !== webhookSecret) {
-    return {
-      statusCode: 403,
-      body: "Forbidden",
-    };
-  }
-
-  const update =
-    typeof event.body === "string" ? JSON.parse(event.body) : event.body;
-
-  await new Promise<void>((resolve) => {
-    bot.processUpdate(update);
-    setTimeout(resolve, 100);
-  });
-
-  return {
-    statusCode: 200,
-    body: "ok",
-  };
-};
+console.log("Bot is running locally with polling");
