@@ -1,5 +1,6 @@
 import type TelegramBot from "node-telegram-bot-api";
 import { activeInlineKeyboards } from "./sharedInlineKeyboardState.ts";
+import { safeEditMessageText } from "../utils/safeEdits.ts";
 
 export function patchAnswerCallbackQuery(bot: TelegramBot) {
   bot.on("callback_query", async (query) => {
@@ -22,13 +23,12 @@ export function patchAnswerCallbackQuery(bot: TelegramBot) {
     activeInlineKeyboards.set(chatKey, perChat);
 
     try {
-      await bot.editMessageText(
-        `${tracked.originalText}\n\n✅ You selected: ${selectedText}`,
-        {
-          chat_id: msg.chat.id,
-          message_id: tracked.messageId,
-          reply_markup: { inline_keyboard: [] },
-        }
+      await safeEditMessageText(
+        bot,
+        msg.chat.id,
+        tracked.messageId,
+        `${tracked.originalText}\n\nYou selected: ${selectedText}`,
+        { inline_keyboard: [] }
       );
     } catch (err: any) {
       if (

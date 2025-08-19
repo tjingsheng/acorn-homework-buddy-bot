@@ -1,6 +1,6 @@
 import { sql } from "drizzle-orm";
 import { boolean, pgTable, serial, text, timestamp } from "drizzle-orm/pg-core";
-import { statuses } from "../util.ts";
+import { statuses } from "../utils/index.ts";
 
 export const scheduledMessage = pgTable("scheduled_message", {
   id: serial("id").primaryKey(),
