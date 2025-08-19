@@ -1,6 +1,10 @@
 import type TelegramBot from "node-telegram-bot-api";
 import type { BotContext, Middleware } from "./botContex";
 import { activeInlineKeyboards } from "../patches/sharedInlineKeyboardState.ts";
+import {
+  safeEditMessageReplyMarkup,
+  safeEditMessageText,
+} from "../utils/safeEdits.ts";
 
 export function handler(
   bot: TelegramBot,
@@ -27,7 +31,7 @@ export function handler(
       callbackQuery: isCallbackQuery ? input : undefined,
     };
 
-    // Mark the clicked message as used (so it won't be “did not select”)
+    // If this update is a callback for a tracked message, mark that message as used
     if (ctx.callbackQuery?.message) {
       const msgId = ctx.callbackQuery.message.message_id;
       const perChat = activeInlineKeyboards.get(ctx.chatId);
@@ -45,6 +49,7 @@ export function handler(
         await clearAllPreviousKeyboardsForChat(bot, ctx);
       }
 
+      // run middlewares
       let index = -1;
       const dispatch = async (i: number): Promise<void> => {
         if (i <= index) throw new Error("next() called multiple times");
@@ -83,6 +88,7 @@ function isInputACallbackQuery(
  * Clear ALL tracked inline keyboards for this chat when a new message arrives:
  * - If a tracked message wasn't used → append "You did not select..." and remove buttons.
  * - If it was used → just ensure buttons are cleared.
+ * Idempotent: ignores "message is not modified" and removes cleared entries from the map.
  */
 async function clearAllPreviousKeyboardsForChat(
   bot: TelegramBot,
@@ -92,33 +98,34 @@ async function clearAllPreviousKeyboardsForChat(
   if (!perChat || perChat.size === 0) return;
 
   const chatIdNum = Number(ctx.chatId);
+  const toDelete: number[] = []; // messageIds to remove from tracking after clearing
 
   for (const tracked of perChat.values()) {
     if (!tracked.used) {
-      await bot.editMessageText(
-        `${tracked.originalText}\n\nYou did not select an option.`,
-        {
-          chat_id: chatIdNum,
-          message_id: tracked.messageId,
-          reply_markup: { inline_keyboard: [] },
-        }
-      );
+      // Add suffix only if not already present (prevents identical text edits)
+      const suffix = "\n\nYou did not select an option.";
+      const newText = tracked.originalText.endsWith(suffix)
+        ? tracked.originalText
+        : `${tracked.originalText}${suffix}`;
+
+      await safeEditMessageText(bot, chatIdNum, tracked.messageId, newText, {
+        inline_keyboard: [],
+      });
     } else {
-      try {
-        await bot.editMessageReplyMarkup(
-          { inline_keyboard: [] },
-          { chat_id: chatIdNum, message_id: tracked.messageId }
-        );
-      } catch (err: any) {
-        if (
-          !err?.response?.body?.description?.includes("message is not modified")
-        ) {
-          throw err;
-        }
-      }
+      await safeEditMessageReplyMarkup(bot, chatIdNum, tracked.messageId, {
+        inline_keyboard: [],
+      });
     }
+
+    // Mark this entry for removal so we don't try to clear it again later
+    toDelete.push(tracked.messageId);
   }
 
-  // After clearing all, reset the map for this chat
-  activeInlineKeyboards.delete(ctx.chatId);
+  // Remove cleared entries (don’t drop the whole chat map if you’re about to add new entries soon)
+  for (const mid of toDelete) perChat.delete(mid);
+  if (perChat.size === 0) {
+    activeInlineKeyboards.delete(ctx.chatId);
+  } else {
+    activeInlineKeyboards.set(ctx.chatId, perChat);
+  }
 }

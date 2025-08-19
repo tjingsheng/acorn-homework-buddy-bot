@@ -1,12 +1,13 @@
 import type TelegramBot from "node-telegram-bot-api";
 import { db } from "../db/index.ts";
 import { scheduledMessage } from "../db/schema.ts";
-import { formatDateSingapore } from "../util.ts";
+
 import { type Middleware } from "../middlewares/botContex.ts";
 import { CALLBACK_KEYS } from "../callbackKeys.ts";
 import { handler } from "../middlewares/handler.ts";
 import { withAdminAuth } from "../middlewares/withAdminAuth.ts";
 import { eq, ne } from "drizzle-orm";
+import { formatDateSingapore } from "../utils/index.ts";
 
 export const manageMessagesCommand: Middleware = async (ctx) => {
   const { bot, chatId } = ctx;
@@ -54,13 +55,6 @@ export const deleteScheduledMessageHandler: Middleware = async (ctx) => {
     .where(eq(scheduledMessage.id, id));
 
   await bot.answerCallbackQuery(callbackQuery.id, { text: "Deleted!" });
-
-  if (callbackQuery.message?.message_id) {
-    await bot.editMessageText("Message deleted.", {
-      chat_id: chatId,
-      message_id: callbackQuery.message.message_id,
-    });
-  }
 };
 
 export const registerManageMessagesFunctionality = (bot: TelegramBot) => {

@@ -5,7 +5,7 @@ import { type Middleware } from "../middlewares/botContex.ts";
 import { CALLBACK_KEYS } from "../callbackKeys.ts";
 import { handler } from "../middlewares/handler.ts";
 import { withAdminAuth } from "../middlewares/withAdminAuth.ts";
-import { chunk, formatDateSingapore, monthNames } from "../util.ts";
+import { chunk, formatDateSingapore, monthNames } from "../utils/index.ts";
 
 const scheduleState = new Map<
   string,
