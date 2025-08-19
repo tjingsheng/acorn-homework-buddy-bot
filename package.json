@@ -3,12 +3,11 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
-  "type": "module",
   "scripts": {
     "dev:docker": "docker compose up --remove-orphans --detach",
     "dev:bot": "nodemon --watch src --watch .env --exec ts-node src/index.ts",
     "dev": "pnpm run --stream /^dev:.*/",
-    "build": "esbuild src/index.ts --bundle --platform=node --target=node22 --format=esm --outfile=dist/index.js --external:dotenv/config",
+    "build": "esbuild src/index.ts --bundle --platform=node --target=node22 --format=cjs --outfile=dist/index.js",
     "ec2": "./scripts/deploy.sh"
   },
   "keywords": [],
