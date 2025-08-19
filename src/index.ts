@@ -1,17 +1,9 @@
 import TelegramBot from "node-telegram-bot-api";
 import dotenv from "@dotenvx/dotenvx";
-import { handler } from "./middlewares/handler.ts";
-import {
-  registerStartInteractions,
-  startCommand,
-} from "./commands/startCommand.ts";
-import { testCommand } from "./commands/testCommand.ts";
-import { withAdminAuth } from "./middlewares/withAdminAuth.ts";
-import { hiCommand } from "./commands/hiCommand.ts";
-import {
-  scheduleCommand,
-  registerScheduleInteractions,
-} from "./commands/scheduleCommand.ts";
+import { registerStartFunctionality } from "./commands/start.ts";
+import { registerTestFunctionality, testCommand } from "./commands/test.ts";
+import { registerHiFunctionality } from "./commands/hi.ts";
+import { registerScheduleFunctionality } from "./commands/schedule.ts";
 
 dotenv.config();
 
@@ -23,17 +15,12 @@ await bot.setMyCommands([
   { command: "schedule", description: "Schedule a message using buttons" },
 ]);
 
-bot.onText(/\/test/, handler(bot, [withAdminAuth, testCommand]));
+registerHiFunctionality(bot);
 
-bot.onText(/\/hi/, handler(bot, [hiCommand]));
+registerScheduleFunctionality(bot);
 
-bot.onText(/\/start/, handler(bot, [startCommand]));
-registerStartInteractions(bot);
+registerStartFunctionality(bot);
 
-bot.onText(
-  /^\/schedule(?:\s+.+)?$/,
-  handler(bot, [withAdminAuth, scheduleCommand])
-);
-registerScheduleInteractions(bot);
+registerTestFunctionality(bot);
 
 console.log("Bot is running locally with polling");
