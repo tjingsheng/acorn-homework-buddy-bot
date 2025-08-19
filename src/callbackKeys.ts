@@ -22,6 +22,7 @@ export const CALLBACK_KEYS = {
 
   MANAGE: {
     DELETE_MESSAGE: (id: number) => `manage_delete_${id}`,
+    EDIT_MESSAGE: (id: number) => `manage_edit_${id}`,
   },
 
   START: {
