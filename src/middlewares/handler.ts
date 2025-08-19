@@ -60,7 +60,7 @@ async function clearPreviousInlineKeyboard(bot: TelegramBot, ctx: BotContext) {
 
   if (!tracked.used) {
     await bot.editMessageText(
-      `${tracked.originalText}\n\n⚠️ You did not select an option.`,
+      `${tracked.originalText}\n\nYou did not select an option.`,
       {
         chat_id: chatId,
         message_id: tracked.messageId,

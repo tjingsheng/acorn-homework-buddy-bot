@@ -40,7 +40,7 @@ export const scheduleCommand: Middleware = async (ctx) => {
     callback_data: CALLBACK_KEYS.SCHEDULE.YEAR(year),
   }));
 
-  const msg = await bot.sendMessage(chatId, "Select a year:", {
+  await bot.sendMessage(chatId, "Select a year:", {
     reply_markup: {
       inline_keyboard: [years, cancelButton],
     },
@@ -60,7 +60,6 @@ export const scheduleCallbackHandler: Middleware = async (ctx) => {
 
     await bot.sendMessage(chatId, "Scheduling cancelled.");
     await bot.answerCallbackQuery(callbackQuery.id);
-
     return;
   }
 
@@ -89,7 +88,6 @@ export const scheduleCallbackHandler: Middleware = async (ctx) => {
       `Scheduled your message for ${formatDateSingapore(date)}`
     );
     await bot.answerCallbackQuery(callbackQuery.id);
-
     return;
   }
 
@@ -97,12 +95,9 @@ export const scheduleCallbackHandler: Middleware = async (ctx) => {
   const state = scheduleState.get(chatId)!;
   const [_, part, value] = data.split("_");
 
-  let newText = "";
-
   switch (part) {
     case "year": {
       state.year = parseInt(value);
-      newText = `You selected year: ${value}`;
       const months = monthNames.map((name, i) => ({
         text: name,
         callback_data: CALLBACK_KEYS.SCHEDULE.MONTH(i + 1),
@@ -116,7 +111,6 @@ export const scheduleCallbackHandler: Middleware = async (ctx) => {
     case "month": {
       state.month = parseInt(value) - 1;
       if (state.year === undefined) return;
-      newText = `You selected month: ${monthNames[state.month]}`;
       const daysInMonth = new Date(state.year, state.month + 1, 0).getDate();
       const days = Array.from({ length: daysInMonth }, (_, i) => ({
         text: `${i + 1}`.padStart(2, "0"),
@@ -130,7 +124,6 @@ export const scheduleCallbackHandler: Middleware = async (ctx) => {
 
     case "day": {
       state.day = parseInt(value);
-      newText = `You selected day: ${value}`;
       const hours = Array.from({ length: 24 }, (_, i) => ({
         text: `${i}`.padStart(2, "0"),
         callback_data: CALLBACK_KEYS.SCHEDULE.HOUR(i),
@@ -143,7 +136,6 @@ export const scheduleCallbackHandler: Middleware = async (ctx) => {
 
     case "hour": {
       state.hour = parseInt(value);
-      newText = `You selected hour: ${value.padStart(2, "0")}`;
       const minutes = [0, 15, 30, 45].map((m) => ({
         text: `${m}`.padStart(2, "0"),
         callback_data: CALLBACK_KEYS.SCHEDULE.MINUTE(m),
@@ -156,7 +148,6 @@ export const scheduleCallbackHandler: Middleware = async (ctx) => {
 
     case "minute": {
       state.minute = parseInt(value);
-      newText = `You selected minute: ${value.padStart(2, "0")}`;
       const date = new Date(
         state.year!,
         state.month!,
@@ -173,13 +164,6 @@ export const scheduleCallbackHandler: Middleware = async (ctx) => {
       );
       break;
     }
-  }
-
-  if (callbackQuery.message?.message_id && newText) {
-    await bot.editMessageText(newText, {
-      chat_id: chatId,
-      message_id: callbackQuery.message.message_id,
-    });
   }
 
   await bot.answerCallbackQuery(callbackQuery.id);
