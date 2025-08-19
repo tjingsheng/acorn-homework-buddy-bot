@@ -13,8 +13,8 @@ echo "Uploading files to EC2..."
 scp ./dist/index.js acorn:~ || exit 1
 scp .env acorn:~ || exit 1
 
-# Restart the bot via SSH + PM2
-echo "Restarting bot on EC2..."
-ssh acorn 'pm2 restart acorn-homework-buddy-bot || pm2 start index.js --name acorn-homework-buddy-bot'
+# Delete and re-create the bot via SSH + PM2
+echo "Recreating bot on EC2..."
+ssh acorn 'pm2 delete acorn-homework-buddy-bot || true && pm2 start index.js --name acorn-homework-buddy-bot'
 
 echo "Deployment complete."
