@@ -1,5 +1,6 @@
 import { sql } from "drizzle-orm";
 import { boolean, pgTable, serial, text, timestamp } from "drizzle-orm/pg-core";
+import { statuses } from "../util.ts";
 
 export const scheduledMessage = pgTable("scheduled_message", {
   id: serial("id").primaryKey(),
@@ -9,8 +10,10 @@ export const scheduledMessage = pgTable("scheduled_message", {
     withTimezone: true,
     mode: "date",
   }).notNull(),
-  sent: boolean("sent").notNull().default(false),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  status: text({ enum: statuses }).default("pending").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
 });
 
 export const user = pgTable("user", {

@@ -1,10 +1,12 @@
 const SCHEDULE_PREFIX = "schedule";
 const START_PREFIX = "start";
+const MANAGE_PREFIX = "manage";
 
 export const CALLBACK_KEYS = {
   PREFIX: {
     SCHEDULE: SCHEDULE_PREFIX,
     START: START_PREFIX,
+    MANAGE: MANAGE_PREFIX,
   },
 
   SCHEDULE: {
@@ -16,6 +18,10 @@ export const CALLBACK_KEYS = {
 
     CONFIRM: `${SCHEDULE_PREFIX}_confirm`,
     CANCEL: `${SCHEDULE_PREFIX}_cancel`,
+  },
+
+  MANAGE: {
+    DELETE_MESSAGE: (id: number) => `manage_delete_${id}`,
   },
 
   START: {

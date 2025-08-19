@@ -32,3 +32,6 @@ export function formatDateSingapore(date: Date): string {
     hour12: false, // 24-hour format
   });
 }
+
+export const statuses = ["sent", "deleted", "pending"] as const;
+export type Status = (typeof statuses)[number];
