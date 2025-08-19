@@ -2,6 +2,7 @@ import { db } from "../db/index.ts";
 import { user } from "../db/schema.ts";
 import { type Middleware } from "../middlewares/botContex.ts";
 import type TelegramBot from "node-telegram-bot-api";
+import { CALLBACK_KEYS } from "../middlewares/callbackKeys.ts";
 
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 const awaitingPassword = new Map<number, TelegramBot.User>();
@@ -12,8 +13,14 @@ export const startCommand: Middleware = async (ctx) => {
   const keyboard = {
     inline_keyboard: [
       [
-        { text: "👨‍🏫 I am a Teacher", callback_data: "start_teacher" },
-        { text: "🎓 I am a Student", callback_data: "start_student" },
+        {
+          text: "👨‍🏫 I am a Teacher",
+          callback_data: CALLBACK_KEYS.START_TEACHER,
+        },
+        {
+          text: "🎓 I am a Student",
+          callback_data: CALLBACK_KEYS.START_STUDENT,
+        },
       ],
     ],
   };
@@ -30,7 +37,9 @@ export const registerStartInteractions = (bot: TelegramBot) => {
 
     const chatId = message.chat.id;
 
-    if (data === "start_student") {
+    if (!data.startsWith(CALLBACK_KEYS.PREFIX.START)) return;
+
+    if (data === CALLBACK_KEYS.START_STUDENT) {
       await db
         .insert(user)
         .values({
@@ -51,7 +60,7 @@ export const registerStartInteractions = (bot: TelegramBot) => {
       );
     }
 
-    if (data === "start_teacher") {
+    if (data === CALLBACK_KEYS.START_TEACHER) {
       awaitingPassword.set(chatId, from);
       await bot.sendMessage(chatId, "🔐 Please enter the teacher password:");
     }

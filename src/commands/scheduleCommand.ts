@@ -2,7 +2,9 @@ import { db } from "../db/index.ts";
 import { scheduledMessage } from "../db/schema.ts";
 import { type Middleware } from "../middlewares/botContex.ts";
 import type TelegramBot from "node-telegram-bot-api";
+import { CALLBACK_KEYS } from "../middlewares/callbackKeys.ts";
 
+// In-memory state
 const scheduleState = new Map<
   string,
   {
@@ -30,7 +32,7 @@ export const scheduleCommand: Middleware = async (ctx) => {
 
   const months = Array.from({ length: 12 }, (_, i) => ({
     text: `${i + 1}`.padStart(2, "0"),
-    callback_data: `schedule_month_${i + 1}`,
+    callback_data: CALLBACK_KEYS.SCHEDULE_MONTH(i + 1),
   }));
 
   await bot.sendMessage(chatId, "📅 Select a month:", {
@@ -49,6 +51,8 @@ export const registerScheduleInteractions = (bot: TelegramBot) => {
     const state = scheduleState.get(chatId);
     if (!state) return;
 
+    if (!data.startsWith(CALLBACK_KEYS.PREFIX.SCHEDULE)) return;
+
     const [_, part, value] = data.split("_");
 
     if (part === "month") {
@@ -58,7 +62,7 @@ export const registerScheduleInteractions = (bot: TelegramBot) => {
       const daysInMonth = new Date(state.year, month + 1, 0).getDate();
       const days = Array.from({ length: daysInMonth }, (_, i) => ({
         text: `${i + 1}`.padStart(2, "0"),
-        callback_data: `schedule_day_${i + 1}`,
+        callback_data: CALLBACK_KEYS.SCHEDULE_DAY(i + 1),
       }));
 
       await bot.sendMessage(chatId, "📅 Select a day:", {
@@ -71,7 +75,7 @@ export const registerScheduleInteractions = (bot: TelegramBot) => {
 
       const hours = Array.from({ length: 24 }, (_, i) => ({
         text: `${i}`.padStart(2, "0"),
-        callback_data: `schedule_hour_${i}`,
+        callback_data: CALLBACK_KEYS.SCHEDULE_HOUR(i),
       }));
 
       await bot.sendMessage(chatId, "🕒 Select an hour (UTC):", {
@@ -84,7 +88,7 @@ export const registerScheduleInteractions = (bot: TelegramBot) => {
 
       const minutes = [0, 15, 30, 45].map((m) => ({
         text: `${m}`.padStart(2, "0"),
-        callback_data: `schedule_minute_${m}`,
+        callback_data: CALLBACK_KEYS.SCHEDULE_MINUTE(m),
       }));
 
       await bot.sendMessage(chatId, "🕓 Select minutes:", {
