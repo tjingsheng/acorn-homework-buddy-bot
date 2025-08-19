@@ -159,8 +159,7 @@ export const scheduleCallbackHandler: Middleware = async (ctx) => {
       scheduleState.delete(chatId);
       await bot.sendMessage(
         chatId,
-        `Now send the message to schedule for:\n*${formatDateSingapore(date)}*`,
-        { parse_mode: "MarkdownV2" }
+        `Now send the message to schedule for:\n${formatDateSingapore(date)}`
       );
       break;
     }
@@ -185,7 +184,6 @@ export const scheduleMessageHandler: Middleware = async (ctx) => {
       scheduledAt
     )}\n\n${text}`,
     {
-      parse_mode: "MarkdownV2",
       reply_markup: {
         inline_keyboard: [
           [
