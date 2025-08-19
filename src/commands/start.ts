@@ -16,11 +16,11 @@ export const startCommand: Middleware = async (ctx) => {
       [
         {
           text: "👨‍🏫 I am a Teacher",
-          callback_data: CALLBACK_KEYS.START_TEACHER,
+          callback_data: CALLBACK_KEYS.START.TEACHER,
         },
         {
           text: "🎓 I am a Student",
-          callback_data: CALLBACK_KEYS.START_STUDENT,
+          callback_data: CALLBACK_KEYS.START.STUDENT,
         },
       ],
     ],
@@ -42,7 +42,7 @@ export const handleStartCallbackQuery = async (
 
   if (!data.startsWith(CALLBACK_KEYS.PREFIX.START)) return;
 
-  if (data === CALLBACK_KEYS.START_STUDENT) {
+  if (data === CALLBACK_KEYS.START.STUDENT) {
     await db
       .insert(user)
       .values({
@@ -63,7 +63,7 @@ export const handleStartCallbackQuery = async (
     );
   }
 
-  if (data === CALLBACK_KEYS.START_TEACHER) {
+  if (data === CALLBACK_KEYS.START.TEACHER) {
     awaitingPassword.set(chatId, from);
     await bot.sendMessage(chatId, "🔐 Please enter the teacher password:");
   }

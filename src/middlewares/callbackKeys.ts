@@ -1,16 +1,21 @@
+const SCHEDULE_PREFIX = "schedule";
+const START_PREFIX = "start";
+
 export const CALLBACK_KEYS = {
-  // Schedule
-  SCHEDULE_MONTH: (m: number) => `schedule_month_${m}`,
-  SCHEDULE_DAY: (d: number) => `schedule_day_${d}`,
-  SCHEDULE_HOUR: (h: number) => `schedule_hour_${h}`,
-  SCHEDULE_MINUTE: (m: number) => `schedule_minute_${m}`,
-
-  // Start
-  START_STUDENT: "start_student",
-  START_TEACHER: "start_teacher",
-
   PREFIX: {
-    SCHEDULE: "schedule_",
-    START: "start_",
+    SCHEDULE: SCHEDULE_PREFIX,
+    START: START_PREFIX,
+  },
+
+  SCHEDULE: {
+    MONTH: (m: number) => `${SCHEDULE_PREFIX}_month_${m}`,
+    DAY: (d: number) => `${SCHEDULE_PREFIX}_day_${d}`,
+    HOUR: (h: number) => `${SCHEDULE_PREFIX}_hour_${h}`,
+    MINUTE: (m: number) => `${SCHEDULE_PREFIX}_minute_${m}`,
+  },
+
+  START: {
+    STUDENT: `${START_PREFIX}_student`,
+    TEACHER: `${START_PREFIX}_teacher`,
   },
 } as const;

@@ -27,7 +27,7 @@ export const scheduleCommand: Middleware = async (ctx) => {
 
   const months = Array.from({ length: 12 }, (_, i) => ({
     text: `${i + 1}`.padStart(2, "0"),
-    callback_data: CALLBACK_KEYS.SCHEDULE_MONTH(i + 1),
+    callback_data: CALLBACK_KEYS.SCHEDULE.MONTH(i + 1),
   }));
 
   await bot.sendMessage(chatId, "📅 Select a month:", {
@@ -52,7 +52,7 @@ export const scheduleCallbackHandler: Middleware = async (ctx) => {
     const daysInMonth = new Date(state.year, month + 1, 0).getDate();
     const days = Array.from({ length: daysInMonth }, (_, i) => ({
       text: `${i + 1}`.padStart(2, "0"),
-      callback_data: CALLBACK_KEYS.SCHEDULE_DAY(i + 1),
+      callback_data: CALLBACK_KEYS.SCHEDULE.DAY(i + 1),
     }));
 
     await bot.sendMessage(chatId, "📅 Select a day:", {
@@ -65,7 +65,7 @@ export const scheduleCallbackHandler: Middleware = async (ctx) => {
 
     const hours = Array.from({ length: 24 }, (_, i) => ({
       text: `${i}`.padStart(2, "0"),
-      callback_data: CALLBACK_KEYS.SCHEDULE_HOUR(i),
+      callback_data: CALLBACK_KEYS.SCHEDULE.HOUR(i),
     }));
 
     await bot.sendMessage(chatId, "🕒 Select an hour (UTC):", {
@@ -78,7 +78,7 @@ export const scheduleCallbackHandler: Middleware = async (ctx) => {
 
     const minutes = [0, 15, 30, 45].map((m) => ({
       text: `${m}`.padStart(2, "0"),
-      callback_data: CALLBACK_KEYS.SCHEDULE_MINUTE(m),
+      callback_data: CALLBACK_KEYS.SCHEDULE.MINUTE(m),
     }));
 
     await bot.sendMessage(chatId, "🕓 Select minutes:", {
@@ -135,10 +135,11 @@ export const registerScheduleFunctionality = (bot: TelegramBot) => {
     handler(bot, [withAdminAuth, scheduleCommand])
   );
 
-  bot.on(
-    "callback_query",
-    handler(bot, [withAdminAuth, scheduleCallbackHandler])
-  );
+  bot.on("callback_query", (query) => {
+    const isSchedule = query.data?.startsWith(CALLBACK_KEYS.PREFIX.SCHEDULE);
+    if (!isSchedule) return;
+    handler(bot, [withAdminAuth, scheduleCallbackHandler])(query);
+  });
 
-  bot.on("message", handler(bot, [withAdminAuth, scheduleMessageHandler]));
+  bot.on("message", handler(bot, [scheduleMessageHandler]));
 };
