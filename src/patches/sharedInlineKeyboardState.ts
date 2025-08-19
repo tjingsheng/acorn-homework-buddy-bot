@@ -5,4 +5,7 @@ export type TrackedMessage = {
   used: boolean;
 };
 
-export const activeInlineKeyboards = new Map<string, TrackedMessage>();
+export const activeInlineKeyboards = new Map<
+  string,
+  Map<number, TrackedMessage>
+>();

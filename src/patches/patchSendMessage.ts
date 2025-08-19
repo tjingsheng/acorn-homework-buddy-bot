@@ -5,13 +5,12 @@ import {
 } from "./sharedInlineKeyboardState.ts";
 
 export function patchSendMessage(bot: TelegramBot) {
-  const originalSendMessage = bot.sendMessage.bind(bot);
+  const original = bot.sendMessage.bind(bot);
 
   bot.sendMessage = async function (chatId, text, options) {
-    const message = await originalSendMessage(chatId, text, options);
+    const message = await original(chatId, text, options);
 
     let markup: any = options?.reply_markup;
-
     if (typeof markup === "string") {
       try {
         markup = JSON.parse(markup);
@@ -20,31 +19,25 @@ export function patchSendMessage(bot: TelegramBot) {
       }
     }
 
-    const isInlineKeyboard =
-      markup &&
-      typeof markup === "object" &&
-      "inline_keyboard" in markup &&
-      Array.isArray(markup.inline_keyboard);
-
-    if (isInlineKeyboard) {
-      const buttons = (
-        markup.inline_keyboard as TelegramBot.InlineKeyboardButton[][]
-      )
+    const keyboard = markup?.inline_keyboard as
+      | TelegramBot.InlineKeyboardButton[][]
+      | undefined;
+    if (Array.isArray(keyboard)) {
+      const buttons = keyboard
         .flat()
-        .filter((btn) => btn.text && btn.callback_data)
-        .map((btn) => ({
-          text: btn.text,
-          data: btn.callback_data!,
-        }));
+        .filter((b) => b.text && b.callback_data)
+        .map((b) => ({ text: b.text, data: b.callback_data! }));
 
-      const tracked: TrackedMessage = {
+      const chatKey = String(chatId);
+      const perChat =
+        activeInlineKeyboards.get(chatKey) ?? new Map<number, TrackedMessage>();
+      perChat.set(message.message_id, {
         messageId: message.message_id,
-        originalText: text,
+        originalText: String(text ?? ""),
         buttons,
         used: false,
-      };
-
-      activeInlineKeyboards.set(String(chatId), tracked);
+      });
+      activeInlineKeyboards.set(chatKey, perChat);
     }
 
     return message;

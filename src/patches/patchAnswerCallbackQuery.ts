@@ -3,38 +3,45 @@ import { activeInlineKeyboards } from "./sharedInlineKeyboardState.ts";
 
 export function patchAnswerCallbackQuery(bot: TelegramBot) {
   bot.on("callback_query", async (query) => {
-    const chatId = query.message?.chat.id;
-    const messageId = query.message?.message_id;
+    const msg = query.message;
     const data = query.data;
+    if (!msg || !data) return;
 
-    if (!chatId || !messageId || !data) return;
+    const chatKey = String(msg.chat.id);
+    const perChat = activeInlineKeyboards.get(chatKey);
+    if (!perChat) return;
 
-    const tracked = activeInlineKeyboards.get(String(chatId));
-    if (!tracked || tracked.messageId !== messageId) return;
+    const tracked = perChat.get(msg.message_id);
+    if (!tracked) return;
 
-    const selectedButton = tracked.buttons.find((b) => b.data === data);
-    const selectedText = selectedButton?.text ?? "an option";
+    const selected = tracked.buttons.find((b) => b.data === data);
+    const selectedText = selected?.text ?? "an option";
+
+    tracked.used = true;
+    perChat.set(tracked.messageId, tracked);
+    activeInlineKeyboards.set(chatKey, perChat);
 
     try {
       await bot.editMessageText(
-        `${tracked.originalText}\n\nYou selected: ${selectedText}`,
+        `${tracked.originalText}\n\n✅ You selected: ${selectedText}`,
         {
-          chat_id: chatId,
-          message_id: messageId,
+          chat_id: msg.chat.id,
+          message_id: tracked.messageId,
           reply_markup: { inline_keyboard: [] },
         }
       );
-      tracked.used = true;
-    } catch (err) {
+    } catch (err: any) {
       if (
-        err.response?.body?.description?.includes("message is not modified")
+        !err?.response?.body?.description?.includes("message is not modified")
       ) {
-        // If the message edited is the same, telegram throws an error. We ignore it.
-      } else {
-        console.error("Failed to edit message:", err);
+        console.error("Failed to edit message after selection:", err);
       }
     }
 
-    await bot.answerCallbackQuery(query.id);
+    try {
+      await bot.answerCallbackQuery(query.id);
+    } catch {
+      /* noop */
+    }
   });
 }
