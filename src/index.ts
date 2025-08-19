@@ -1,8 +1,10 @@
 import TelegramBot from "node-telegram-bot-api";
 import dotenv from "@dotenvx/dotenvx";
 import { handler } from "./middlewares/handler.ts";
-import { startCommand } from "./commands/startCommand.ts";
-import { authCommand } from "./commands/authCommand.ts";
+import {
+  registerStartInteractions,
+  startCommand,
+} from "./commands/startCommand.ts";
 import { testCommand } from "./commands/testCommand.ts";
 import { withAdminAuth } from "./middlewares/withAdminAuth.ts";
 import { hiCommand } from "./commands/hiCommand.ts";
@@ -13,13 +15,12 @@ dotenv.config();
 const token = process.env.TELEGRAM_TOKEN!;
 const bot = new TelegramBot(token, { polling: true });
 
-bot.onText(/\/start/, handler(bot, [startCommand]));
-
-bot.onText(/^\/auth(?:\s+.+)?$/, handler(bot, [authCommand]));
-
 bot.onText(/\/test/, handler(bot, [withAdminAuth, testCommand]));
 
 bot.onText(/\/hi/, handler(bot, [hiCommand]));
+
+bot.onText(/\/start/, handler(bot, [startCommand]));
+registerStartInteractions(bot);
 
 bot.onText(
   /^\/schedule(?:\s+.+)?$/,
