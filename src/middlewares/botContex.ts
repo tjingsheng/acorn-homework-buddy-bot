@@ -2,8 +2,9 @@ import TelegramBot from "node-telegram-bot-api";
 
 export type BotContext = {
   bot: TelegramBot;
-  message: TelegramBot.Message;
   chatId: string;
+  message?: TelegramBot.Message;
+  callbackQuery?: TelegramBot.CallbackQuery;
 };
 
 export type Middleware = (

@@ -20,6 +20,7 @@ const bot = new TelegramBot(token, { polling: true });
 
 await bot.setMyCommands([
   { command: "start", description: "Start and register with the bot" },
+  { command: "schedule", description: "Schedule a message using buttons" },
 ]);
 
 bot.onText(/\/test/, handler(bot, [withAdminAuth, testCommand]));
