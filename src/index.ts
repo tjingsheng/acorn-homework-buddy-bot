@@ -6,6 +6,7 @@ import { registerScheduleMessageFunctionality } from "./commands/schedule_messag
 import { registerManageMessagesFunctionality } from "./commands/manage_messages.ts";
 import { patchSendMessage } from "./patches/patchSendMessage.ts";
 import { patchAnswerCallbackQuery } from "./patches/patchAnswerCallbackQuery.ts";
+import { startScheduledMessageWorker } from "./scheduleWorker.ts";
 
 async function main() {
   dotenv.config();
@@ -30,10 +31,13 @@ async function main() {
 
   patchAnswerCallbackQuery(bot);
   patchSendMessage(bot);
+
   registerHiFunctionality(bot);
   registerScheduleMessageFunctionality(bot);
   registerStartFunctionality(bot);
   registerManageMessagesFunctionality(bot);
+
+  startScheduledMessageWorker(bot);
 
   console.log("Bot is running locally with polling");
 }
