@@ -3,7 +3,7 @@ import { user } from "../db/schema.ts";
 import { type Middleware } from "../middlewares/botContex.ts";
 import type TelegramBot from "node-telegram-bot-api";
 import { CALLBACK_KEYS } from "../callbackKeys.ts";
-import { handler } from "../middlewares/handler.ts";
+import { handler, setActiveInlineKeyboard } from "../middlewares/handler.ts";
 
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 const awaitingPassword = new Map<number, TelegramBot.User>();
@@ -11,24 +11,27 @@ const awaitingPassword = new Map<number, TelegramBot.User>();
 export const startCommand: Middleware = async (ctx) => {
   const { bot, chatId } = ctx;
 
-  const keyboard = {
-    inline_keyboard: [
-      [
-        {
-          text: "I am a Teacher",
-          callback_data: CALLBACK_KEYS.START.TEACHER,
-        },
-        {
-          text: "I am a Student",
-          callback_data: CALLBACK_KEYS.START.STUDENT,
-        },
-      ],
-    ],
-  };
-
-  await bot.sendMessage(chatId, "Welcome! Please select your role:", {
-    reply_markup: keyboard,
-  });
+  const msg = await bot.sendMessage(
+    chatId,
+    "Welcome! Please select your role:",
+    {
+      reply_markup: {
+        inline_keyboard: [
+          [
+            {
+              text: "I am a Teacher",
+              callback_data: CALLBACK_KEYS.START.TEACHER,
+            },
+            {
+              text: "I am a Student",
+              callback_data: CALLBACK_KEYS.START.STUDENT,
+            },
+          ],
+        ],
+      },
+    }
+  );
+  setActiveInlineKeyboard(chatId, msg.message_id);
 };
 
 export const handleStartCallbackQuery = async (

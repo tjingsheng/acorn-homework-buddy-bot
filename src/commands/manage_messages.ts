@@ -4,7 +4,7 @@ import { scheduledMessage } from "../db/schema.ts";
 import { formatDateSingapore } from "../util.ts";
 import { type Middleware } from "../middlewares/botContex.ts";
 import { CALLBACK_KEYS } from "../callbackKeys.ts";
-import { handler } from "../middlewares/handler.ts";
+import { handler, setActiveInlineKeyboard } from "../middlewares/handler.ts";
 import { withAdminAuth } from "../middlewares/withAdminAuth.ts";
 import { eq, ne } from "drizzle-orm";
 
@@ -39,6 +39,7 @@ export const manageMessagesCommand: Middleware = async (ctx) => {
         },
       }
     );
+    setActiveInlineKeyboard(chatId, msg.id);
   }
 };
 

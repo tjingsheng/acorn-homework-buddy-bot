@@ -37,6 +37,17 @@ export function handler(
     };
 
     try {
+      const lastKeyboardMsgId = activeInlineKeyboards.get(ctx.chatId);
+      if (lastKeyboardMsgId !== undefined) {
+        try {
+          await bot.editMessageReplyMarkup(
+            { inline_keyboard: [] },
+            { chat_id: chatId, message_id: lastKeyboardMsgId }
+          );
+        } catch (err) {}
+        activeInlineKeyboards.delete(ctx.chatId);
+      }
+
       await dispatch(0);
     } catch (err) {
       console.error("Middleware error:", err);
@@ -62,4 +73,10 @@ function isCallbackQuery(
   input: TelegramBot.Message | TelegramBot.CallbackQuery
 ): input is TelegramBot.CallbackQuery {
   return "id" in input && "data" in input;
+}
+
+const activeInlineKeyboards = new Map<string, number>();
+
+export function setActiveInlineKeyboard(chatId: string, messageId: number) {
+  activeInlineKeyboards.set(chatId, messageId);
 }
