@@ -5,6 +5,8 @@ import { registerHiFunctionality } from "./commands/hi.ts";
 import { registerScheduleMessageFunctionality } from "./commands/schedule_message.ts";
 import { registerManageMessagesFunctionality } from "./commands/manage_messages.ts";
 import { patchSendMessage } from "./patches/patchSendMessage.ts";
+import { activeInlineKeyboards } from "./patches/sharedInlineKeyboardState.ts";
+import { patchAnswerCallbackQuery } from "./patches/patchAnswerCallbackQuery.ts";
 
 dotenv.config();
 
@@ -25,6 +27,8 @@ await bot.setMyCommands([
     description: "View and delete scheduled messages",
   },
 ]);
+
+patchAnswerCallbackQuery(bot);
 
 patchSendMessage(bot);
 

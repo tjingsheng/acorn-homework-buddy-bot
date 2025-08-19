@@ -68,13 +68,23 @@ async function clearPreviousInlineKeyboard(bot: TelegramBot, ctx: BotContext) {
       }
     );
   } else {
-    await bot.editMessageReplyMarkup(
-      { inline_keyboard: [] },
-      {
-        chat_id: chatId,
-        message_id: tracked.messageId,
+    try {
+      await bot.editMessageReplyMarkup(
+        { inline_keyboard: [] },
+        {
+          chat_id: chatId,
+          message_id: tracked.messageId,
+        }
+      );
+    } catch (err: any) {
+      if (
+        err.response?.body?.description?.includes("message is not modified")
+      ) {
+        // Ignore this specific error
+      } else {
+        throw err;
       }
-    );
+    }
   }
 }
 
