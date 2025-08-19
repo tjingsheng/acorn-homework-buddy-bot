@@ -5,6 +5,7 @@ import { type Middleware } from "../middlewares/botContex.ts";
 import { CALLBACK_KEYS } from "../middlewares/callbackKeys.ts";
 import { handler } from "../middlewares/handler.ts";
 import { withAdminAuth } from "../middlewares/withAdminAuth.ts";
+import { chunk, formatDateSingapore, monthNames } from "../util.ts";
 
 const scheduleState = new Map<
   string,
@@ -22,32 +23,18 @@ const cancelButton: TelegramBot.InlineKeyboardButton[] = [
   { text: "Cancel", callback_data: CALLBACK_KEYS.SCHEDULE.CANCEL },
 ];
 
-function chunk<T>(arr: T[], size: number): T[][] {
-  return Array.from({ length: Math.ceil(arr.length / size) }, (_, i) =>
-    arr.slice(i * size, i * size + size)
-  );
-}
-
-const monthNames = [
-  "January",
-  "February",
-  "March",
-  "April",
-  "May",
-  "June",
-  "July",
-  "August",
-  "September",
-  "October",
-  "November",
-  "December",
-];
-
 export const scheduleCommand: Middleware = async (ctx) => {
   const { bot, chatId } = ctx;
   scheduleState.set(chatId, {});
 
-  const currentYear = new Date().getUTCFullYear();
+  const currentYear = parseInt(
+    new Date().toLocaleString("en-SG", {
+      timeZone: "Asia/Singapore",
+      year: "numeric",
+    }),
+    10
+  );
+
   const years = [currentYear, currentYear + 1].map((year) => ({
     text: `${year}`,
     callback_data: CALLBACK_KEYS.SCHEDULE.YEAR(year),
@@ -71,7 +58,7 @@ export const scheduleCallbackHandler: Middleware = async (ctx) => {
     awaitingMessage.delete(chatId);
     pendingText.delete(chatId);
 
-    await bot.sendMessage(chatId, "Schedule cancelled.");
+    await bot.sendMessage(chatId, "Scheduling cancelled.");
     await bot.answerCallbackQuery(callbackQuery.id);
 
     if (callbackQuery.message?.message_id) {
@@ -90,7 +77,7 @@ export const scheduleCallbackHandler: Middleware = async (ctx) => {
     if (!date || !text) {
       await bot.sendMessage(
         chatId,
-        "⚠️ No pending message to confirm. Please try again."
+        "No pending message to confirm. Please try again."
       );
       await bot.answerCallbackQuery(callbackQuery.id);
       if (callbackQuery.message?.message_id) {
@@ -111,7 +98,7 @@ export const scheduleCallbackHandler: Middleware = async (ctx) => {
 
     await bot.sendMessage(
       chatId,
-      `Scheduled your message for ${date.toUTCString()}`
+      `Scheduled your message for ${formatDateSingapore(date)}`
     );
     await bot.answerCallbackQuery(callbackQuery.id);
 
@@ -124,37 +111,22 @@ export const scheduleCallbackHandler: Middleware = async (ctx) => {
     return;
   }
 
-  if (!data.startsWith(CALLBACK_KEYS.PREFIX.SCHEDULE)) return;
-
   if (!scheduleState.has(chatId)) scheduleState.set(chatId, {});
   const state = scheduleState.get(chatId)!;
-
   const [_, part, value] = data.split("_");
 
-  const summary = () =>
-    `Selected: ${state.year ?? "-"} / ${
-      typeof state.month === "number" ? monthNames[state.month] : "-"
-    } / ${state.day ?? "-"} ${
-      typeof state.hour === "number"
-        ? `/ ${state.hour.toString().padStart(2, "0")}`
-        : ""
-    }${
-      typeof state.minute === "number"
-        ? `:${state.minute.toString().padStart(2, "0")}`
-        : ""
-    }`;
+  let newText = "";
 
   switch (part) {
     case "year": {
       state.year = parseInt(value);
+      newText = `You selected year: ${value}`;
       const months = monthNames.map((name, i) => ({
         text: name,
         callback_data: CALLBACK_KEYS.SCHEDULE.MONTH(i + 1),
       }));
-      await bot.sendMessage(chatId, `${summary()}\nSelect a month:`, {
-        reply_markup: {
-          inline_keyboard: [...chunk(months, 3), cancelButton],
-        },
+      await bot.sendMessage(chatId, "Select a month:", {
+        reply_markup: { inline_keyboard: [...chunk(months, 3), cancelButton] },
       });
       break;
     }
@@ -162,85 +134,73 @@ export const scheduleCallbackHandler: Middleware = async (ctx) => {
     case "month": {
       state.month = parseInt(value) - 1;
       if (state.year === undefined) return;
-
+      newText = `You selected month: ${monthNames[state.month]}`;
       const daysInMonth = new Date(state.year, state.month + 1, 0).getDate();
       const days = Array.from({ length: daysInMonth }, (_, i) => ({
         text: `${i + 1}`.padStart(2, "0"),
         callback_data: CALLBACK_KEYS.SCHEDULE.DAY(i + 1),
       }));
-
-      await bot.sendMessage(chatId, `${summary()}\n📅 Select a day:`, {
-        reply_markup: {
-          inline_keyboard: [...chunk(days, 7), cancelButton],
-        },
+      await bot.sendMessage(chatId, "Select a day:", {
+        reply_markup: { inline_keyboard: [...chunk(days, 7), cancelButton] },
       });
       break;
     }
 
     case "day": {
       state.day = parseInt(value);
-
+      newText = `You selected day: ${value}`;
       const hours = Array.from({ length: 24 }, (_, i) => ({
         text: `${i}`.padStart(2, "0"),
         callback_data: CALLBACK_KEYS.SCHEDULE.HOUR(i),
       }));
-
-      await bot.sendMessage(chatId, `${summary()}\n🕒 Select an hour (UTC):`, {
-        reply_markup: {
-          inline_keyboard: [...chunk(hours, 6), cancelButton],
-        },
+      await bot.sendMessage(chatId, "Select an hour (24-hour clock):", {
+        reply_markup: { inline_keyboard: [...chunk(hours, 6), cancelButton] },
       });
       break;
     }
 
     case "hour": {
       state.hour = parseInt(value);
-
+      newText = `You selected hour: ${value.padStart(2, "0")}`;
       const minutes = [0, 15, 30, 45].map((m) => ({
         text: `${m}`.padStart(2, "0"),
         callback_data: CALLBACK_KEYS.SCHEDULE.MINUTE(m),
       }));
-
-      await bot.sendMessage(chatId, `${summary()}\nSelect minutes:`, {
-        reply_markup: {
-          inline_keyboard: [minutes, cancelButton],
-        },
+      await bot.sendMessage(chatId, "Select minutes:", {
+        reply_markup: { inline_keyboard: [minutes, cancelButton] },
       });
       break;
     }
 
     case "minute": {
       state.minute = parseInt(value);
-
+      newText = `You selected minute: ${value.padStart(2, "0")}`;
       const date = new Date(
-        Date.UTC(
-          state.year!,
-          state.month!,
-          state.day!,
-          state.hour!,
-          state.minute!
-        )
+        state.year!,
+        state.month!,
+        state.day!,
+        state.hour!,
+        state.minute!
       );
-
       awaitingMessage.set(chatId, date);
       scheduleState.delete(chatId);
-
       await bot.sendMessage(
         chatId,
-        `Now send the message to schedule for:\n*${date.toUTCString()}*`,
+        `Now send the message to schedule for:\n*${formatDateSingapore(date)}*`,
         { parse_mode: "Markdown" }
       );
       break;
     }
   }
 
-  await bot.answerCallbackQuery(callbackQuery.id);
-  if (callbackQuery.message?.message_id) {
-    await bot.editMessageReplyMarkup(
-      { inline_keyboard: [] },
-      { chat_id: chatId, message_id: callbackQuery.message.message_id }
-    );
+  if (callbackQuery.message?.message_id && newText) {
+    await bot.editMessageText(newText, {
+      chat_id: chatId,
+      message_id: callbackQuery.message.message_id,
+    });
   }
+
+  await bot.answerCallbackQuery(callbackQuery.id);
 };
 
 export const scheduleMessageHandler: Middleware = async (ctx) => {
@@ -255,7 +215,9 @@ export const scheduleMessageHandler: Middleware = async (ctx) => {
 
   await bot.sendMessage(
     chatId,
-    `Please confirm scheduling:\n\n*${scheduledAt.toUTCString()}*\n\n${text}`,
+    `Please confirm scheduling\n\n${formatDateSingapore(
+      scheduledAt
+    )}\n\n${text}`,
     {
       parse_mode: "Markdown",
       reply_markup: {
