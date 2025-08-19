@@ -4,6 +4,7 @@ import { registerStartFunctionality } from "./commands/start.ts";
 import { registerHiFunctionality } from "./commands/hi.ts";
 import { registerScheduleMessageFunctionality } from "./commands/schedule_message.ts";
 import { registerManageMessagesFunctionality } from "./commands/manage_messages.ts";
+import { patchSendMessage } from "./middlewares/patchSendMessage.ts";
 
 dotenv.config();
 
@@ -24,6 +25,9 @@ await bot.setMyCommands([
     description: "View and delete scheduled messages",
   },
 ]);
+
+patchSendMessage(bot);
+
 registerHiFunctionality(bot);
 
 registerScheduleMessageFunctionality(bot);

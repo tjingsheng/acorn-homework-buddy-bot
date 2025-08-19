@@ -1,5 +1,8 @@
 import type TelegramBot from "node-telegram-bot-api";
 import type { BotContext, Middleware } from "./botContex.ts";
+import { getActiveInlineKeyboards } from "./patchSendMessage.ts";
+
+const activeInlineKeyboards = getActiveInlineKeyboards();
 
 export function handler(
   bot: TelegramBot,
@@ -27,15 +30,6 @@ export function handler(
       callbackQuery: isCallback ? input : undefined,
     };
 
-    let index = -1;
-
-    const dispatch = async (i: number): Promise<void> => {
-      if (i <= index) throw new Error("next() called multiple times");
-      index = i;
-      const fn = middlewares[i];
-      if (fn) await fn(ctx, () => dispatch(i + 1));
-    };
-
     try {
       const lastKeyboardMsgId = activeInlineKeyboards.get(ctx.chatId);
       if (lastKeyboardMsgId !== undefined) {
@@ -47,6 +41,14 @@ export function handler(
         } catch (err) {}
         activeInlineKeyboards.delete(ctx.chatId);
       }
+
+      let index = -1;
+      const dispatch = async (i: number): Promise<void> => {
+        if (i <= index) throw new Error("next() called multiple times");
+        index = i;
+        const fn = middlewares[i];
+        if (fn) await fn(ctx, () => dispatch(i + 1));
+      };
 
       await dispatch(0);
     } catch (err) {
@@ -73,10 +75,4 @@ function isCallbackQuery(
   input: TelegramBot.Message | TelegramBot.CallbackQuery
 ): input is TelegramBot.CallbackQuery {
   return "id" in input && "data" in input;
-}
-
-const activeInlineKeyboards = new Map<string, number>();
-
-export function setActiveInlineKeyboard(chatId: string, messageId: number) {
-  activeInlineKeyboards.set(chatId, messageId);
 }

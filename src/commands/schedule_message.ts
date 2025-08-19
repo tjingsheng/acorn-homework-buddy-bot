@@ -3,7 +3,7 @@ import { db } from "../db/index.ts";
 import { scheduledMessage } from "../db/schema.ts";
 import { type Middleware } from "../middlewares/botContex.ts";
 import { CALLBACK_KEYS } from "../callbackKeys.ts";
-import { handler, setActiveInlineKeyboard } from "../middlewares/handler.ts";
+import { handler } from "../middlewares/handler.ts";
 import { withAdminAuth } from "../middlewares/withAdminAuth.ts";
 import { chunk, formatDateSingapore, monthNames } from "../util.ts";
 
@@ -45,7 +45,6 @@ export const scheduleCommand: Middleware = async (ctx) => {
       inline_keyboard: [years, cancelButton],
     },
   });
-  setActiveInlineKeyboard(chatId, msg.message_id);
 };
 
 export const scheduleCallbackHandler: Middleware = async (ctx) => {
@@ -108,10 +107,9 @@ export const scheduleCallbackHandler: Middleware = async (ctx) => {
         text: name,
         callback_data: CALLBACK_KEYS.SCHEDULE.MONTH(i + 1),
       }));
-      const msg = await bot.sendMessage(chatId, "Select a month:", {
+      await bot.sendMessage(chatId, "Select a month:", {
         reply_markup: { inline_keyboard: [...chunk(months, 3), cancelButton] },
       });
-      setActiveInlineKeyboard(chatId, msg.message_id);
       break;
     }
 
@@ -124,10 +122,9 @@ export const scheduleCallbackHandler: Middleware = async (ctx) => {
         text: `${i + 1}`.padStart(2, "0"),
         callback_data: CALLBACK_KEYS.SCHEDULE.DAY(i + 1),
       }));
-      const msg = await bot.sendMessage(chatId, "Select a day:", {
+      await bot.sendMessage(chatId, "Select a day:", {
         reply_markup: { inline_keyboard: [...chunk(days, 7), cancelButton] },
       });
-      setActiveInlineKeyboard(chatId, msg.message_id);
       break;
     }
 
@@ -138,14 +135,9 @@ export const scheduleCallbackHandler: Middleware = async (ctx) => {
         text: `${i}`.padStart(2, "0"),
         callback_data: CALLBACK_KEYS.SCHEDULE.HOUR(i),
       }));
-      const msg = await bot.sendMessage(
-        chatId,
-        "Select an hour (24-hour clock):",
-        {
-          reply_markup: { inline_keyboard: [...chunk(hours, 6), cancelButton] },
-        }
-      );
-      setActiveInlineKeyboard(chatId, msg.message_id);
+      await bot.sendMessage(chatId, "Select an hour (24-hour clock):", {
+        reply_markup: { inline_keyboard: [...chunk(hours, 6), cancelButton] },
+      });
       break;
     }
 
@@ -156,10 +148,9 @@ export const scheduleCallbackHandler: Middleware = async (ctx) => {
         text: `${m}`.padStart(2, "0"),
         callback_data: CALLBACK_KEYS.SCHEDULE.MINUTE(m),
       }));
-      const msg = await bot.sendMessage(chatId, "Select minutes:", {
+      await bot.sendMessage(chatId, "Select minutes:", {
         reply_markup: { inline_keyboard: [minutes, cancelButton] },
       });
-      setActiveInlineKeyboard(chatId, msg.message_id);
       break;
     }
 
@@ -204,7 +195,7 @@ export const scheduleMessageHandler: Middleware = async (ctx) => {
   const text = message.text.trim();
   pendingText.set(chatId, text);
 
-  const msg = await bot.sendMessage(
+  await bot.sendMessage(
     chatId,
     `Please confirm scheduling on ${formatDateSingapore(
       scheduledAt
@@ -224,7 +215,6 @@ export const scheduleMessageHandler: Middleware = async (ctx) => {
       },
     }
   );
-  setActiveInlineKeyboard(chatId, msg.message_id);
 };
 
 export const registerScheduleMessageFunctionality = (bot: TelegramBot) => {

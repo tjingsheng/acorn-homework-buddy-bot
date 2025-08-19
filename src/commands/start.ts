@@ -3,7 +3,7 @@ import { user } from "../db/schema.ts";
 import { type Middleware } from "../middlewares/botContex.ts";
 import type TelegramBot from "node-telegram-bot-api";
 import { CALLBACK_KEYS } from "../callbackKeys.ts";
-import { handler, setActiveInlineKeyboard } from "../middlewares/handler.ts";
+import { handler } from "../middlewares/handler.ts";
 
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 const awaitingPassword = new Map<number, TelegramBot.User>();
@@ -31,7 +31,6 @@ export const startCommand: Middleware = async (ctx) => {
       },
     }
   );
-  setActiveInlineKeyboard(chatId, msg.message_id);
 };
 
 export const handleStartCallbackQuery = async (
