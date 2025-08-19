@@ -129,9 +129,9 @@ export const scheduleMessageHandler: Middleware = async (ctx) => {
   );
 };
 
-export const registerScheduleFunctionality = (bot: TelegramBot) => {
+export const registerScheduleMessageFunctionality = (bot: TelegramBot) => {
   bot.onText(
-    /^\/schedule(?:\s+.+)?$/,
+    /^\/schedule_message(?:\s+.+)?$/,
     handler(bot, [withAdminAuth, scheduleCommand])
   );
 
