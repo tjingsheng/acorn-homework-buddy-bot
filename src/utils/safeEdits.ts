@@ -8,34 +8,24 @@ export function isNotModifiedError(err: any) {
 
 export async function safeEditMessageText(
   bot: TelegramBot,
-  chatId: number,
-  messageId: number,
-  text: string,
-  replyMarkup?: TelegramBot.InlineKeyboardMarkup
+  ...args: Parameters<TelegramBot["editMessageText"]>
 ) {
   try {
-    await bot.editMessageText(text, {
-      chat_id: chatId,
-      message_id: messageId,
-      reply_markup: replyMarkup,
-    });
+    return await bot.editMessageText(...args);
   } catch (err) {
     if (!isNotModifiedError(err)) throw err;
+    return undefined;
   }
 }
 
 export async function safeEditMessageReplyMarkup(
   bot: TelegramBot,
-  chatId: number,
-  messageId: number,
-  replyMarkup?: TelegramBot.InlineKeyboardMarkup
+  ...args: Parameters<TelegramBot["editMessageReplyMarkup"]>
 ) {
   try {
-    await bot.editMessageReplyMarkup(replyMarkup, {
-      chat_id: chatId,
-      message_id: messageId,
-    });
+    return await bot.editMessageReplyMarkup(...args);
   } catch (err) {
     if (!isNotModifiedError(err)) throw err;
+    return undefined;
   }
 }

@@ -25,10 +25,12 @@ export function patchAnswerCallbackQuery(bot: TelegramBot) {
     try {
       await safeEditMessageText(
         bot,
-        msg.chat.id,
-        tracked.messageId,
         `${tracked.originalText}\n\nYou selected: ${selectedText}`,
-        { inline_keyboard: [] }
+        {
+          chat_id: msg.chat.id,
+          message_id: tracked.messageId,
+          reply_markup: { inline_keyboard: [] },
+        }
       );
     } catch (err: any) {
       if (

@@ -102,19 +102,24 @@ async function clearAllPreviousKeyboardsForChat(
 
   for (const tracked of perChat.values()) {
     if (!tracked.used) {
-      // Add suffix only if not already present (prevents identical text edits)
       const suffix = "\n\nYou did not select an option.";
       const newText = tracked.originalText.endsWith(suffix)
         ? tracked.originalText
         : `${tracked.originalText}${suffix}`;
-
-      await safeEditMessageText(bot, chatIdNum, tracked.messageId, newText, {
-        inline_keyboard: [],
+      await safeEditMessageText(bot, newText, {
+        chat_id: chatIdNum,
+        message_id: tracked.messageId,
+        reply_markup: { inline_keyboard: [] },
       });
     } else {
-      await safeEditMessageReplyMarkup(bot, chatIdNum, tracked.messageId, {
-        inline_keyboard: [],
-      });
+      await safeEditMessageReplyMarkup(
+        bot,
+        { inline_keyboard: [] },
+        {
+          chat_id: chatIdNum,
+          message_id: tracked.messageId,
+        }
+      );
     }
 
     // Mark this entry for removal so we don't try to clear it again later
