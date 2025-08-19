@@ -215,7 +215,7 @@ export const scheduleMessageHandler: Middleware = async (ctx) => {
 
   await bot.sendMessage(
     chatId,
-    `Please confirm scheduling\n\n${formatDateSingapore(
+    `Please confirm scheduling on ${formatDateSingapore(
       scheduledAt
     )}\n\n${text}`,
     {
