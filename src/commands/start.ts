@@ -15,18 +15,18 @@ export const startCommand: Middleware = async (ctx) => {
     inline_keyboard: [
       [
         {
-          text: "👨‍🏫 I am a Teacher",
+          text: "I am a Teacher",
           callback_data: CALLBACK_KEYS.START.TEACHER,
         },
         {
-          text: "🎓 I am a Student",
+          text: "I am a Student",
           callback_data: CALLBACK_KEYS.START.STUDENT,
         },
       ],
     ],
   };
 
-  await bot.sendMessage(chatId, "👋 Welcome! Please select your role:", {
+  await bot.sendMessage(chatId, "Welcome! Please select your role:", {
     reply_markup: keyboard,
   });
 };
@@ -42,7 +42,11 @@ export const handleStartCallbackQuery = async (
 
   if (!data.startsWith(CALLBACK_KEYS.PREFIX.START)) return;
 
+  let selectionText = "";
+
   if (data === CALLBACK_KEYS.START.STUDENT) {
+    selectionText = "You selected Student.";
+
     await db
       .insert(user)
       .values({
@@ -59,13 +63,22 @@ export const handleStartCallbackQuery = async (
 
     await bot.sendMessage(
       chatId,
-      "🎓 You’ve been registered as a student. You'll receive notifications here."
+      "You’ve been registered as a student. You will receive notifications here."
     );
   }
 
   if (data === CALLBACK_KEYS.START.TEACHER) {
+    selectionText = "You selected Teacher.";
+
     awaitingPassword.set(chatId, from);
-    await bot.sendMessage(chatId, "🔐 Please enter the teacher password:");
+    await bot.sendMessage(chatId, "Please enter the teacher password:");
+  }
+
+  if (message.message_id && selectionText) {
+    await bot.editMessageText(selectionText, {
+      chat_id: chatId,
+      message_id: message.message_id,
+    });
   }
 
   await bot.answerCallbackQuery(id);
@@ -83,14 +96,14 @@ export const handleTeacherPasswordInput = async (
 
   const passwordAttempt = msgCtx.text?.trim();
   if (!passwordAttempt) {
-    await bot.sendMessage(chatId, "❗ Please enter a valid password.");
+    await bot.sendMessage(chatId, "Please enter a valid password.");
     return;
   }
 
   if (!ADMIN_PASSWORD) {
     await bot.sendMessage(
       chatId,
-      "⚠️ Server misconfigured: ADMIN_PASSWORD is not set."
+      "Server misconfigured: ADMIN_PASSWORD is not set."
     );
     awaitingPassword.delete(chatId);
     return;
@@ -113,12 +126,12 @@ export const handleTeacherPasswordInput = async (
 
     await bot.sendMessage(
       chatId,
-      "✅ Welcome, teacher! You are now registered and can use admin features."
+      "Welcome, teacher! You are now registered and can use admin features."
     );
   } else {
     await bot.sendMessage(
       chatId,
-      "❌ Incorrect password. Please try /start again."
+      "Incorrect password. Please try /start again."
     );
   }
 
