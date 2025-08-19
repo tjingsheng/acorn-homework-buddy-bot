@@ -14,8 +14,9 @@ export const withAdminAuth: Middleware = async (ctx, next) => {
   if (!currentUser?.isAdmin) {
     await bot.sendMessage(
       chatId,
-      "You are not authorised to use this command."
+      "You are not authorised to use this command. If you haven't registered, please use /start first."
     );
+
     return;
   }
 
