@@ -1,8 +1,6 @@
 import type TelegramBot from "node-telegram-bot-api";
 import type { BotContext, Middleware } from "./botContex.ts";
-import { getActiveInlineKeyboards } from "./patchSendMessage.ts";
-
-const activeInlineKeyboards = getActiveInlineKeyboards();
+import { activeInlineKeyboards } from "../patches/sharedInlineKeyboardState.ts";
 
 export function handler(
   bot: TelegramBot,

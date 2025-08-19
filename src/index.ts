@@ -4,7 +4,7 @@ import { registerStartFunctionality } from "./commands/start.ts";
 import { registerHiFunctionality } from "./commands/hi.ts";
 import { registerScheduleMessageFunctionality } from "./commands/schedule_message.ts";
 import { registerManageMessagesFunctionality } from "./commands/manage_messages.ts";
-import { patchSendMessage } from "./middlewares/patchSendMessage.ts";
+import { patchSendMessage } from "./patches/patchSendMessage.ts";
 
 dotenv.config();
 

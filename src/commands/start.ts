@@ -44,11 +44,7 @@ export const handleStartCallbackQuery = async (
 
   if (!data.startsWith(CALLBACK_KEYS.PREFIX.START)) return;
 
-  let selectionText = "";
-
   if (data === CALLBACK_KEYS.START.STUDENT) {
-    selectionText = "You selected Student.";
-
     await db
       .insert(user)
       .values({
@@ -70,17 +66,8 @@ export const handleStartCallbackQuery = async (
   }
 
   if (data === CALLBACK_KEYS.START.TEACHER) {
-    selectionText = "You selected Teacher.";
-
     awaitingPassword.set(chatId, from);
     await bot.sendMessage(chatId, "Please enter the teacher password:");
-  }
-
-  if (message.message_id && selectionText) {
-    await bot.editMessageText(selectionText, {
-      chat_id: chatId,
-      message_id: message.message_id,
-    });
   }
 
   await bot.answerCallbackQuery(id);
