@@ -53,7 +53,7 @@ export const scheduleCommand: Middleware = async (ctx) => {
     callback_data: CALLBACK_KEYS.SCHEDULE.YEAR(year),
   }));
 
-  await bot.sendMessage(chatId, "📅 Select a year:", {
+  await bot.sendMessage(chatId, "Select a year:", {
     reply_markup: {
       inline_keyboard: [years, cancelButton],
     },
@@ -66,13 +66,12 @@ export const scheduleCallbackHandler: Middleware = async (ctx) => {
 
   const data = callbackQuery.data;
 
-  // Global cancel (works at any time)
   if (data === CALLBACK_KEYS.SCHEDULE.CANCEL) {
     scheduleState.delete(chatId);
     awaitingMessage.delete(chatId);
     pendingText.delete(chatId);
 
-    await bot.sendMessage(chatId, "❌ Schedule cancelled.");
+    await bot.sendMessage(chatId, "Schedule cancelled.");
     await bot.answerCallbackQuery(callbackQuery.id);
 
     if (callbackQuery.message?.message_id) {
@@ -84,7 +83,6 @@ export const scheduleCallbackHandler: Middleware = async (ctx) => {
     return;
   }
 
-  // Final confirm (after user typed message)
   if (data === CALLBACK_KEYS.SCHEDULE.CONFIRM) {
     const date = awaitingMessage.get(chatId);
     const text = pendingText.get(chatId);
@@ -108,13 +106,12 @@ export const scheduleCallbackHandler: Middleware = async (ctx) => {
       .insert(scheduledMessage)
       .values({ scheduledAt: date, message: text });
 
-    // Clean up
     awaitingMessage.delete(chatId);
     pendingText.delete(chatId);
 
     await bot.sendMessage(
       chatId,
-      `✅ Scheduled your message for ${date.toUTCString()}`
+      `Scheduled your message for ${date.toUTCString()}`
     );
     await bot.answerCallbackQuery(callbackQuery.id);
 
@@ -127,7 +124,6 @@ export const scheduleCallbackHandler: Middleware = async (ctx) => {
     return;
   }
 
-  // Ignore if not schedule-related
   if (!data.startsWith(CALLBACK_KEYS.PREFIX.SCHEDULE)) return;
 
   if (!scheduleState.has(chatId)) scheduleState.set(chatId, {});
@@ -136,7 +132,7 @@ export const scheduleCallbackHandler: Middleware = async (ctx) => {
   const [_, part, value] = data.split("_");
 
   const summary = () =>
-    `🗓️ Selected: ${state.year ?? "-"} / ${
+    `Selected: ${state.year ?? "-"} / ${
       typeof state.month === "number" ? monthNames[state.month] : "-"
     } / ${state.day ?? "-"} ${
       typeof state.hour === "number"
@@ -155,7 +151,7 @@ export const scheduleCallbackHandler: Middleware = async (ctx) => {
         text: name,
         callback_data: CALLBACK_KEYS.SCHEDULE.MONTH(i + 1),
       }));
-      await bot.sendMessage(chatId, `${summary()}\n📅 Select a month:`, {
+      await bot.sendMessage(chatId, `${summary()}\nSelect a month:`, {
         reply_markup: {
           inline_keyboard: [...chunk(months, 3), cancelButton],
         },
@@ -205,7 +201,7 @@ export const scheduleCallbackHandler: Middleware = async (ctx) => {
         callback_data: CALLBACK_KEYS.SCHEDULE.MINUTE(m),
       }));
 
-      await bot.sendMessage(chatId, `${summary()}\n🕓 Select minutes:`, {
+      await bot.sendMessage(chatId, `${summary()}\nSelect minutes:`, {
         reply_markup: {
           inline_keyboard: [minutes, cancelButton],
         },
@@ -226,20 +222,18 @@ export const scheduleCallbackHandler: Middleware = async (ctx) => {
         )
       );
 
-      // Store only date here; message comes next
       awaitingMessage.set(chatId, date);
       scheduleState.delete(chatId);
 
       await bot.sendMessage(
         chatId,
-        `📝 Now send the message to schedule for:\n*${date.toUTCString()}*`,
+        `Now send the message to schedule for:\n*${date.toUTCString()}*`,
         { parse_mode: "Markdown" }
       );
       break;
     }
   }
 
-  // Acknowledge and clear old keyboard (prevents tapping old buttons)
   await bot.answerCallbackQuery(callbackQuery.id);
   if (callbackQuery.message?.message_id) {
     await bot.editMessageReplyMarkup(
@@ -254,22 +248,21 @@ export const scheduleMessageHandler: Middleware = async (ctx) => {
   if (!message?.text?.trim()) return;
 
   const scheduledAt = awaitingMessage.get(chatId);
-  if (!scheduledAt) return; // Only collect text if time already chosen
+  if (!scheduledAt) return;
 
-  // Save pending text for final confirmation
   const text = message.text.trim();
   pendingText.set(chatId, text);
 
   await bot.sendMessage(
     chatId,
-    `📋 Please confirm scheduling:\n\n🕒 *${scheduledAt.toUTCString()}*\n💬 *${text}*`,
+    `Please confirm scheduling:\n\n*${scheduledAt.toUTCString()}*\n\n${text}`,
     {
       parse_mode: "Markdown",
       reply_markup: {
         inline_keyboard: [
           [
             {
-              text: "✅ Confirm",
+              text: "Confirm",
               callback_data: CALLBACK_KEYS.SCHEDULE.CONFIRM,
             },
           ],
@@ -288,12 +281,7 @@ export const registerScheduleMessageFunctionality = (bot: TelegramBot) => {
 
   bot.on("callback_query", (query) => {
     const d = query.data;
-    const isSchedule =
-      d?.startsWith(CALLBACK_KEYS.PREFIX.SCHEDULE) ||
-      d === CALLBACK_KEYS.SCHEDULE.CONFIRM ||
-      d === CALLBACK_KEYS.SCHEDULE.CANCEL;
-
-    if (!isSchedule) return;
+    if (!d?.startsWith(CALLBACK_KEYS.PREFIX.SCHEDULE)) return;
     handler(bot, [withAdminAuth, scheduleCallbackHandler])(query);
   });
 
