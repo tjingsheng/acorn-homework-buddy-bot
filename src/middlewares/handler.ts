@@ -31,49 +31,11 @@ export function handler(
     };
 
     try {
-      const tracked = activeInlineKeyboards.get(ctx.chatId);
-      if (tracked) {
-        activeInlineKeyboards.delete(ctx.chatId);
-
-        if (!tracked.used) {
-          await bot.editMessageText(
-            `${tracked.originalText}\n\nYou did not select an option.`,
-            {
-              chat_id: chatId,
-              message_id: tracked.messageId,
-              reply_markup: { inline_keyboard: [] },
-            }
-          );
-        } else {
-          await bot.editMessageReplyMarkup(
-            { inline_keyboard: [] },
-            {
-              chat_id: chatId,
-              message_id: tracked.messageId,
-            }
-          );
-        }
-      }
-
-      let index = -1;
-      const dispatch = async (i: number): Promise<void> => {
-        if (i <= index) throw new Error("next() called multiple times");
-        index = i;
-        const fn = middlewares[i];
-        if (fn) await fn(ctx, () => dispatch(i + 1));
-      };
-
-      await dispatch(0);
+      await clearPreviousInlineKeyboard(bot, ctx);
+      await runMiddlewares(middlewares, ctx);
     } catch (err) {
       console.error("Middleware error:", err);
-      if (isMsg) {
-        await bot.sendMessage(chatId, "An internal error occurred.");
-      } else if (isCallback) {
-        await bot.answerCallbackQuery(input.id, {
-          text: "An error occurred.",
-          show_alert: true,
-        });
-      }
+      await respondWithError(bot, chatId, input);
     }
   };
 }
@@ -88,4 +50,61 @@ function isCallbackQuery(
   input: TelegramBot.Message | TelegramBot.CallbackQuery
 ): input is TelegramBot.CallbackQuery {
   return "id" in input && "data" in input;
+}
+
+async function clearPreviousInlineKeyboard(bot: TelegramBot, ctx: BotContext) {
+  const tracked = activeInlineKeyboards.get(ctx.chatId);
+  if (!tracked) return;
+
+  activeInlineKeyboards.delete(ctx.chatId);
+
+  const chatId = parseInt(ctx.chatId, 10);
+
+  if (!tracked.used) {
+    await bot.editMessageText(
+      `${tracked.originalText}\n\n⚠️ You did not select an option.`,
+      {
+        chat_id: chatId,
+        message_id: tracked.messageId,
+        reply_markup: { inline_keyboard: [] },
+      }
+    );
+  } else {
+    await bot.editMessageReplyMarkup(
+      { inline_keyboard: [] },
+      {
+        chat_id: chatId,
+        message_id: tracked.messageId,
+      }
+    );
+  }
+}
+
+async function runMiddlewares(middlewares: Middleware[], ctx: BotContext) {
+  let index = -1;
+
+  const dispatch = async (i: number): Promise<void> => {
+    if (i <= index) throw new Error("next() called multiple times");
+    index = i;
+
+    const fn = middlewares[i];
+    if (fn) await fn(ctx, () => dispatch(i + 1));
+  };
+
+  await dispatch(0);
+}
+
+async function respondWithError(
+  bot: TelegramBot,
+  chatId: number,
+  input: TelegramBot.Message | TelegramBot.CallbackQuery
+) {
+  if (isMessage(input)) {
+    await bot.sendMessage(chatId, "An internal error occurred.");
+  } else if (isCallbackQuery(input)) {
+    await bot.answerCallbackQuery(input.id, {
+      text: "An error occurred.",
+      show_alert: true,
+    });
+  }
 }
