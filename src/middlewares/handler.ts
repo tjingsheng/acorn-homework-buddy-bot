@@ -100,31 +100,32 @@ async function clearAllPreviousKeyboardsForChat(
   const chatIdNum = Number(ctx.chatId);
   const toDelete: number[] = []; // messageIds to remove from tracking after clearing
 
-  for (const tracked of perChat.values()) {
-    if (!tracked.used) {
-      const suffix = "\n\nYou did not select an option.";
-      const newText = tracked.originalText.endsWith(suffix)
-        ? tracked.originalText
-        : `${tracked.originalText}${suffix}`;
-      await safeEditMessageText(bot, newText, {
-        chat_id: chatIdNum,
-        message_id: tracked.messageId,
-        reply_markup: { inline_keyboard: [] },
-      });
-    } else {
-      await safeEditMessageReplyMarkup(
-        bot,
-        { inline_keyboard: [] },
-        {
+  await Promise.all(
+    Array.from(perChat.values()).map(async (tracked) => {
+      if (!tracked.used) {
+        const suffix = "\n\nYou did not select an option.";
+        const newText = tracked.originalText.endsWith(suffix)
+          ? tracked.originalText
+          : `${tracked.originalText}${suffix}`;
+        await safeEditMessageText(bot, newText, {
           chat_id: chatIdNum,
           message_id: tracked.messageId,
-        }
-      );
-    }
+          reply_markup: { inline_keyboard: [] },
+        });
+      } else {
+        await safeEditMessageReplyMarkup(
+          bot,
+          { inline_keyboard: [] },
+          {
+            chat_id: chatIdNum,
+            message_id: tracked.messageId,
+          }
+        );
+      }
 
-    // Mark this entry for removal so we don't try to clear it again later
-    toDelete.push(tracked.messageId);
-  }
+      toDelete.push(tracked.messageId);
+    })
+  );
 
   // Remove cleared entries (don’t drop the whole chat map if you’re about to add new entries soon)
   for (const mid of toDelete) perChat.delete(mid);

@@ -27,28 +27,30 @@ export const manageMessagesCommand: Middleware = async (ctx) => {
     return;
   }
 
-  for (const msg of messages) {
-    await bot.sendMessage(
-      chatId,
-      `${formatDateSingapore(msg.scheduledAt)}\n${msg.message}`,
-      {
-        reply_markup: {
-          inline_keyboard: [
-            [
-              {
-                text: "Delete",
-                callback_data: CALLBACK_KEYS.MANAGE.DELETE_MESSAGE(msg.id),
-              },
-              {
-                text: "Edit",
-                callback_data: CALLBACK_KEYS.MANAGE.EDIT_MESSAGE(msg.id),
-              },
+  await Promise.all(
+    messages.map((msg) =>
+      bot.sendMessage(
+        chatId,
+        `${formatDateSingapore(msg.scheduledAt)}\n${msg.message}`,
+        {
+          reply_markup: {
+            inline_keyboard: [
+              [
+                {
+                  text: "Delete",
+                  callback_data: CALLBACK_KEYS.MANAGE.DELETE_MESSAGE(msg.id),
+                },
+                {
+                  text: "Edit",
+                  callback_data: CALLBACK_KEYS.MANAGE.EDIT_MESSAGE(msg.id),
+                },
+              ],
             ],
-          ],
-        },
-      }
-    );
-  }
+          },
+        }
+      )
+    )
+  );
 };
 
 export const manageCallbackHandler: Middleware = async (ctx) => {
