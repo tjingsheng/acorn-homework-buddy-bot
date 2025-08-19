@@ -28,6 +28,15 @@ export function handler(
       callbackQuery: isCallback ? input : undefined,
     };
 
+    if (ctx.callbackQuery?.message) {
+      const { message_id } = ctx.callbackQuery.message;
+      const tracked = activeInlineKeyboards.get(ctx.chatId);
+      if (tracked && tracked.messageId === message_id) {
+        tracked.used = true;
+        activeInlineKeyboards.set(ctx.chatId, tracked);
+      }
+    }
+
     try {
       await clearPreviousInlineKeyboard(bot, ctx);
       await runMiddlewares(middlewares, ctx);
@@ -54,6 +63,10 @@ async function clearPreviousInlineKeyboard(bot: TelegramBot, ctx: BotContext) {
   const tracked = activeInlineKeyboards.get(ctx.chatId);
   if (!tracked) return;
 
+  const sameMessageAsCallback =
+    ctx.callbackQuery?.message?.message_id === tracked.messageId;
+  if (sameMessageAsCallback) return;
+
   activeInlineKeyboards.delete(ctx.chatId);
 
   const chatId = parseInt(ctx.chatId, 10);
@@ -71,17 +84,13 @@ async function clearPreviousInlineKeyboard(bot: TelegramBot, ctx: BotContext) {
     try {
       await bot.editMessageReplyMarkup(
         { inline_keyboard: [] },
-        {
-          chat_id: chatId,
-          message_id: tracked.messageId,
-        }
+        { chat_id: chatId, message_id: tracked.messageId }
       );
     } catch (err: any) {
+      // Telegram throws error when we edit a message with no change. We ignore it.
       if (
-        err.response?.body?.description?.includes("message is not modified")
+        !err?.response?.body?.description?.includes("message is not modified")
       ) {
-        // Ignore this specific error
-      } else {
         throw err;
       }
     }
