@@ -8,6 +8,7 @@ export const CALLBACK_KEYS = {
   },
 
   SCHEDULE: {
+    YEAR: (y: number) => `${SCHEDULE_PREFIX}_year_${y}`,
     MONTH: (m: number) => `${SCHEDULE_PREFIX}_month_${m}`,
     DAY: (d: number) => `${SCHEDULE_PREFIX}_day_${d}`,
     HOUR: (h: number) => `${SCHEDULE_PREFIX}_hour_${h}`,
