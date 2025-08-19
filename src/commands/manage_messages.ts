@@ -131,5 +131,5 @@ export const registerManageMessagesFunctionality = (bot: TelegramBot) => {
     handler(bot, [withAdminAuth, manageCallbackHandler])(query);
   });
 
-  bot.on("message", handler(bot, [withAdminAuth, manageEditTextHandler]));
+  bot.on("message", handler(bot, [manageEditTextHandler]));
 };
