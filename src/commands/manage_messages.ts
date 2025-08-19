@@ -3,7 +3,7 @@ import { db } from "../db/index.ts";
 import { scheduledMessage } from "../db/schema.ts";
 import { formatDateSingapore } from "../util.ts";
 import { type Middleware } from "../middlewares/botContex.ts";
-import { CALLBACK_KEYS } from "../middlewares/callbackKeys.ts";
+import { CALLBACK_KEYS } from "../callbackKeys.ts";
 import { handler } from "../middlewares/handler.ts";
 import { withAdminAuth } from "../middlewares/withAdminAuth.ts";
 import { eq, ne } from "drizzle-orm";

@@ -2,7 +2,7 @@ import { db } from "../db/index.ts";
 import { user } from "../db/schema.ts";
 import { type Middleware } from "../middlewares/botContex.ts";
 import type TelegramBot from "node-telegram-bot-api";
-import { CALLBACK_KEYS } from "../middlewares/callbackKeys.ts";
+import { CALLBACK_KEYS } from "../callbackKeys.ts";
 import { handler } from "../middlewares/handler.ts";
 
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
