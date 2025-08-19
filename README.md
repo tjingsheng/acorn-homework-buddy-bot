@@ -2,6 +2,10 @@
 
 Sends automated reminders about upcoming assignments or homework.
 
+## Bot Information
+
+I’m your personal homework reminder bot. Schedule tasks, get timely alerts, and stay on top of assignments without stress.
+
 ## Development Setup
 
 This setup guide walks you through installing and configuring the development environment for the project. By the end of this guide, you will have a fully functional local development setup with all necessary services running. Please follow each step carefully to ensure everything is correctly configured.
