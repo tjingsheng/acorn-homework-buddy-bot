@@ -19,7 +19,7 @@ export const manageMessagesCommand: Middleware = async (ctx) => {
   const messages = await db
     .select()
     .from(scheduledMessage)
-    .where(ne(scheduledMessage.status, "deleted"))
+    .where(eq(scheduledMessage.status, "pending"))
     .orderBy(scheduledMessage.scheduledAt);
 
   if (messages.length === 0) {
