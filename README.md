@@ -46,70 +46,6 @@ This setup guide walks you through installing and configuring the development en
    pnpm dev
    ```
 
-## Deployment
-
-To deploy the bot on an AWS EC2 instance quickly.
-
-1. **Set up SSH Configuration**
-
-   Follow the steps below with the suggested alias
-
-2. **Run the deployment script**
-
-   ```sh
-   pnpm ec2
-   ```
-
-To deploy the bot on an AWS EC2 instance manually.
-
-1. **Install dependencies**
-
-   ```sh
-   pnpm install
-   ```
-
-2. **Build the project locally**
-
-   ```sh
-   pnpm build
-   ```
-
-3. **Upload the build and environment file to EC2**
-
-   ```sh
-   scp ./dist/index.js acorn:~
-   scp .env acorn:~
-   ```
-
-4. **SSH into the EC2 instance**
-
-   ```sh
-   ssh acorn
-   ```
-
-5. **Start or restart the bot using PM2**
-
-   - To start the bot:
-
-     ```sh
-     pm2 start index.js --name acorn-homework-buddy-bot
-     ```
-
-   - To restart the bot after updates:
-
-     ```sh
-     pm2 restart acorn-homework-buddy-bot
-     ```
-
-6. **(Optional) Save and enable auto-start on reboot**
-
-   ```sh
-   pm2 save
-   pm2 startup
-   ```
-
-   Then run the command PM2 prints to complete the setup.
-
 ## SSH Configuration (Optional but highly Recommended)
 
 To simplify repeated access to your EC2 instance, you can configure a shortcut alias called `acorn`.
@@ -155,3 +91,23 @@ To simplify repeated access to your EC2 instance, you can configure a shortcut a
    ```
 
    If successful, you'll connect without needing to type the full hostname and path every time.
+
+## Deployment
+
+This method assumes you have configured the SSH alias `acorn` as described above.
+
+Before you proceed, ensure the following are ready:
+
+- An AWS EC2 instance is running and accessible via SSH.
+- A PostgreSQL database is available and accessible from the EC2 instance.
+- You have configured the required environment variables in a `.env` file.
+
+Adjust values as needed for your environment.
+
+From the project root, run:
+
+```sh
+pnpm ec2
+```
+
+This will build and deploy the bot to your EC2 instance using the `acorn` SSH alias.
