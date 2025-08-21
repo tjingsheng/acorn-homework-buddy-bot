@@ -23,7 +23,7 @@ export const manageMessagesCommand: Middleware = async (ctx) => {
     .orderBy(scheduledMessage.scheduledAt);
 
   if (messages.length === 0) {
-    await bot.sendMessage(chatId, "There are no scheduled messages.");
+    await bot.sendMessage(chatId, "There are no scheduled homework.");
     return;
   }
 
