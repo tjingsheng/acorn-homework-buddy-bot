@@ -48,7 +48,7 @@ This setup guide walks you through installing and configuring the development en
 
 ## Deployment
 
-### To deploy the bot on an AWS EC2 instance quickly.
+To deploy the bot on an AWS EC2 instance quickly.
 
 1. **Set up SSH Configuration**
 
@@ -60,7 +60,7 @@ This setup guide walks you through installing and configuring the development en
    pnpm ec2
    ```
 
-### To deploy the bot on an AWS EC2 instance manually.
+To deploy the bot on an AWS EC2 instance manually.
 
 1. **Install dependencies**
 
@@ -110,46 +110,48 @@ This setup guide walks you through installing and configuring the development en
 
    Then run the command PM2 prints to complete the setup.
 
-## SSH Configuration
+## SSH Configuration (Optional but highly Recommended)
 
-To simplify connecting to the EC2 instance, you can configure an SSH alias named `acorn`.
+To simplify repeated access to your EC2 instance, you can configure a shortcut alias called `acorn`.
 
-1. **Move your EC2 `.pem` key to the `.ssh` directory (if not already done)**
+1. Move Your EC2 Key File
+
+   Ensure your `.pem` key file is stored securely in your SSH directory:
 
    ```sh
    mv ~/Downloads/acorn-homework-buddy-bot.pem ~/.ssh/
    chmod 400 ~/.ssh/acorn-homework-buddy-bot.pem
    ```
 
-2. **Edit your SSH config file**
+2. Configure the SSH Alias
 
-   Open or create `~/.ssh/config`:
+   Open (or create) your SSH config file:
 
    ```sh
    vim ~/.ssh/config
    ```
 
-3. **Add the following block (replace values accordingly)**
+   Add the following block, replacing the placeholder values as needed:
 
    ```ini
    Host acorn
-       HostName ec2-XX-XX-XX-XX.ap-southeast-1.compute.amazonaws.com
-       User ec2-user
-       IdentityFile ~/.ssh/acorn-homework-buddy-bot.pem
+      HostName ec2-XX-XX-XX-XX.ap-southeast-1.compute.amazonaws.com
+      User ec2-user
+      IdentityFile ~/.ssh/acorn-homework-buddy-bot.pem
    ```
 
    - `HostName`: Your EC2 instance's public DNS or IP address
-   - `User`: Use `ec2-user` for Amazon Linux, `ubuntu` for Ubuntu
-   - `IdentityFile`: Full path to your `.pem` key file
+   - `User`: Use `ec2-user` for Amazon Linux, or `ubuntu` for Ubuntu
+   - `IdentityFile`: Full path to your `.pem` file
 
-4. **Save and close the file**
+   Save and exit the file (`:wq` in vim).
 
-   In vim, use the command `:wq`
+3. Test the SSH Shortcut (Optional)
 
-5. **Test the SSH alias**
+   Once configured, test it with:
 
    ```sh
    ssh acorn
    ```
 
-   If successful, you’ll connect without typing the full address again.
+   If successful, you'll connect without needing to type the full hostname and path every time.
